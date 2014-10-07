@@ -6,7 +6,7 @@ import com.englishtown.vertx.zookeeper.builders.GetDataBuilder;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import com.englishtown.vertx.zookeeper.builders.impl.DefaultGetDataBuilder;
 import com.englishtown.vertx.zookeeper.builders.impl.DefaultZooKeeperOperationBuilders;
-import com.englishtown.vertx.zookeeper.impl.DefaultConfiguratorClient;
+import com.englishtown.vertx.zookeeper.promises.impl.DefaultConfiguratorHelper;
 import com.englishtown.vertx.zookeeper.impl.DefaultZooKeeperClient;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -24,7 +24,7 @@ public class BasicIntegrationTest extends TestVerticle {
 
     private When when;
     private DefaultZooKeeperClient curatorClient;
-    private DefaultConfiguratorClient configuratorClient;
+    private DefaultConfiguratorHelper configuratorClient;
     private CuratorFramework curatorFramework;
 
     @Override
@@ -36,7 +36,7 @@ public class BasicIntegrationTest extends TestVerticle {
         ZooKeeperOperationBuilders zooKeeperOperationBuilders = new DefaultZooKeeperOperationBuilders(getDataBuilderProvider);
 
         curatorClient = new DefaultZooKeeperClient(vertx);
-        configuratorClient = new DefaultConfiguratorClient(container, when, curatorClient, zooKeeperOperationBuilders);
+        configuratorClient = new DefaultConfiguratorHelper(container, when, curatorClient, zooKeeperOperationBuilders);
 
         curatorFramework = CuratorFrameworkFactory.newClient("127.0.0.1:2181", new ExponentialBackoffRetry(100, 3));
         curatorFramework.start();

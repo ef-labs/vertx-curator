@@ -1,9 +1,9 @@
-package com.englishtown.vertx.zookeeper.impl;
+package com.englishtown.vertx.zookeeper.promises.impl;
 
 import com.englishtown.promises.Deferred;
 import com.englishtown.promises.Promise;
 import com.englishtown.promises.When;
-import com.englishtown.vertx.zookeeper.ConfiguratorClient;
+import com.englishtown.vertx.zookeeper.promises.ConfiguratorHelper;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import org.slf4j.Logger;
@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  */
-public class DefaultConfiguratorClient implements ConfiguratorClient {
+public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
     private static final String ZOOKEEPER_PATH_ENVVAR = "zookeeper_paths";
     private static final String PATH_DELIMITER = "\\|";
@@ -27,10 +27,10 @@ public class DefaultConfiguratorClient implements ConfiguratorClient {
     private final ZooKeeperOperationBuilders zooKeeperOperationBuilders;
     private List<String> basePaths = new ArrayList<>();
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultConfiguratorClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultConfiguratorHelper.class);
 
     @Inject
-    public DefaultConfiguratorClient(Container container, When when, ZooKeeperClient zooKeeperClient, ZooKeeperOperationBuilders zooKeeperOperationBuilders) {
+    public DefaultConfiguratorHelper(Container container, When when, ZooKeeperClient zooKeeperClient, ZooKeeperOperationBuilders zooKeeperOperationBuilders) {
         this.when = when;
         this.zooKeeperClient = zooKeeperClient;
         this.zooKeeperOperationBuilders = zooKeeperOperationBuilders;

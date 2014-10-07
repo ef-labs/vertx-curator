@@ -1,11 +1,10 @@
 package com.englishtown.vertx.zookeeper.impl;
 
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
+import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.api.CuratorEvent;
-import org.apache.curator.retry.RetryNTimes;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Context;
 import org.vertx.java.core.Handler;
@@ -14,22 +13,36 @@ import org.vertx.java.core.impl.DefaultFutureResult;
 
 import javax.inject.Inject;
 
+import static org.apache.curator.framework.CuratorFrameworkFactory.Builder;
+import static org.apache.curator.framework.CuratorFrameworkFactory.builder;
+
 /**
  */
 public class DefaultZooKeeperClient implements ZooKeeperClient {
 
     private CuratorFramework framework;
     private Vertx vertx;
+    private final ZooKeeperConfigurator configurator;
 
     @Inject
-    public DefaultZooKeeperClient(Vertx vertx) {
+    public DefaultZooKeeperClient(Vertx vertx, ZooKeeperConfigurator configurator) {
         this.vertx = vertx;
+        this.configurator = configurator;
         init();
     }
 
     //TODO: Take the IP address from environment variable
     private void init() {
-        framework = CuratorFrameworkFactory.newClient("127.0.0.1:2181", new RetryNTimes(0, 100));
+        Builder builder = builder()
+                .retryPolicy(configurator.getRetryPolicy())
+                .connectString(configurator.getConnectionString());
+
+        ZooKeeperConfigurator.AuthPolicy auth = configurator.getAuthPolicy();
+        if (auth != null) {
+            builder.authorization(auth.geScheme(), auth.getAuth().getBytes());
+        }
+
+        framework = builder.build();
         framework.start();
     }
 
@@ -50,7 +63,7 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
     private Handler<AsyncResult<CuratorEvent>> wrapHandler(Handler<AsyncResult<CuratorEvent>> toWrap) {
         Context context = vertx.currentContext();
 
-       return (result) -> {
+        return (result) -> {
             context.runOnContext(aVoid -> {
                 toWrap.handle(result);
             });

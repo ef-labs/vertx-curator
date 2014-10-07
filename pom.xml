@@ -20,7 +20,7 @@
 
     <properties>
         <vertx.version>2.1.2</vertx.version>
-        <when.java.version>3.0.0</when.java.version>
+        <vertx.mod.when.version>3.0.0</vertx.mod.when.version>
         <curator.version>2.6.0</curator.version>
         <vertx.mod.hk2.version>1.7.0</vertx.mod.hk2.version>
     </properties>
@@ -29,8 +29,8 @@
         <dependencies>
             <dependency>
                 <groupId>com.englishtown</groupId>
-                <artifactId>when.java</artifactId>
-                <version>${when.java.version}</version>
+                <artifactId>vertx-mod-when</artifactId>
+                <version>${vertx.mod.when.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>

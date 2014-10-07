@@ -1,48 +1,54 @@
 package com.englishtown.vertx.zookeeper.integration;
 
-import com.englishtown.promises.When;
-import com.englishtown.promises.WhenFactory;
-import com.englishtown.vertx.zookeeper.builders.GetDataBuilder;
-import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
-import com.englishtown.vertx.zookeeper.builders.impl.DefaultGetDataBuilder;
-import com.englishtown.vertx.zookeeper.builders.impl.DefaultZooKeeperOperationBuilders;
-import com.englishtown.vertx.zookeeper.promises.impl.DefaultConfiguratorHelper;
-import com.englishtown.vertx.zookeeper.impl.DefaultZooKeeperClient;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.junit.Test;
-import org.vertx.testtools.TestVerticle;
+import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.VertxAssert;
-
-import javax.inject.Provider;
 
 /**
  */
-public class BasicIntegrationTest extends TestVerticle {
+public class BasicIntegrationTest extends AbstractIntegrationTest {
 
-    private When when;
-    private DefaultZooKeeperClient curatorClient;
-    private DefaultConfiguratorHelper configuratorClient;
     private CuratorFramework curatorFramework;
 
+//    @Override
+//    public void start() {
+//        when = WhenFactory.createSync();
+//
+//        // Builders
+//        Provider<GetDataBuilder> getDataBuilderProvider = DefaultGetDataBuilder::new;
+//        ZooKeeperOperationBuilders zooKeeperOperationBuilders = new DefaultZooKeeperOperationBuilders(getDataBuilderProvider);
+//
+//        zookeeperClient = new DefaultZooKeeperClient(vertx);
+//        configuratorHelper = new DefaultConfiguratorHelper(container, when, zookeeperClient, zooKeeperOperationBuilders);
+//
+//        curatorFramework = CuratorFrameworkFactory.newClient("127.0.0.1:2181", new ExponentialBackoffRetry(100, 3));
+//        curatorFramework.start();
+//
+//        initialize();
+//        startTests();
+//    }
+
     @Override
-    public void start() {
-        when = WhenFactory.createSync();
+    protected JsonObject createZooKeeperConfig() {
+        JsonObject json = super.createZooKeeperConfig();
 
-        // Builders
-        Provider<GetDataBuilder> getDataBuilderProvider = DefaultGetDataBuilder::new;
-        ZooKeeperOperationBuilders zooKeeperOperationBuilders = new DefaultZooKeeperOperationBuilders(getDataBuilderProvider);
+        return json.putArray("path-prefixes", new JsonArray()
+                .addString("/test/env/dev/application")
+                .addString("/test/env/dev")
+                .addString("/test/global"));
+    }
 
-        curatorClient = new DefaultZooKeeperClient(vertx);
-        configuratorClient = new DefaultConfiguratorHelper(container, when, curatorClient, zooKeeperOperationBuilders);
+    @Override
+    protected void setup() throws Exception {
+        super.setup();
+        curatorFramework = zookeeperClient.getCuratorFramework();
 
-        curatorFramework = CuratorFrameworkFactory.newClient("127.0.0.1:2181", new ExponentialBackoffRetry(100, 3));
-        curatorFramework.start();
-
-        initialize();
-        startTests();
+        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/global/cassandra/seeds", "10.0.0.1,10.0.0.2".getBytes());
+        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/cassandra/seeds", "192.168.0.1,192.168.0.2".getBytes());
+        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/application/cassandra/seeds", "0.0.0.0".getBytes());
     }
 
     @Override
@@ -52,10 +58,9 @@ public class BasicIntegrationTest extends TestVerticle {
 
     @Test
     public void testReadingTheApplicationConfigValue() throws Exception {
-        setupTestData();
 
         // First time we try and get the seeds variable, it should return 0.0.0.0
-        configuratorClient.getConfigElement("/cassandra/seeds").then(
+        configuratorHelper.getConfigElement("/cassandra/seeds").then(
                 element -> {
                     VertxAssert.assertNotNull(element);
                     VertxAssert.assertEquals("0.0.0.0", new String(element));
@@ -63,7 +68,7 @@ public class BasicIntegrationTest extends TestVerticle {
                     // Assuming that is true then wipe out the application one and try again
                     try {
                         curatorFramework.delete().forPath("/test/env/dev/application/cassandra/seeds");
-                        return configuratorClient.getConfigElement("/cassandra/seeds");
+                        return configuratorHelper.getConfigElement("/cassandra/seeds");
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -76,7 +81,7 @@ public class BasicIntegrationTest extends TestVerticle {
                     // Now wipe out the environment znode and go again.
                     try {
                         curatorFramework.delete().forPath("/test/env/dev/cassandra/seeds");
-                        return configuratorClient.getConfigElement("/cassandra/seeds");
+                        return configuratorHelper.getConfigElement("/cassandra/seeds");
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -93,16 +98,11 @@ public class BasicIntegrationTest extends TestVerticle {
         ).otherwise(
                 t -> {
                     VertxAssert.handleThrowable(t);
-                    VertxAssert.testComplete();
+                    VertxAssert.fail();
 
                     return null;
                 }
         );
     }
 
-    public void setupTestData() throws Exception {
-        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/global/cassandra/seeds", "10.0.0.1,10.0.0.2".getBytes());
-        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/cassandra/seeds", "192.168.0.1,192.168.0.2".getBytes());
-        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/application/cassandra/seeds", "0.0.0.0".getBytes());
-    }
 }

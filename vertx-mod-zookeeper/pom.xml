@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>com.englishtown</groupId>
-            <artifactId>when.java</artifactId>
+            <artifactId>vertx-mod-when</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

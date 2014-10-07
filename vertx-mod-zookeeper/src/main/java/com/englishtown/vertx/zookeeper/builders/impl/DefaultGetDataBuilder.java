@@ -1,7 +1,7 @@
 package com.englishtown.vertx.zookeeper.builders.impl;
 
-import com.englishtown.vertx.zookeeper.builders.GetDataBuilder;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
+import com.englishtown.vertx.zookeeper.builders.GetDataBuilder;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.vertx.java.core.impl.DefaultFutureResult;
 

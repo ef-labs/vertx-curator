@@ -1,0 +1,8 @@
+{
+    "includes": "com.englishtown~when.java~3.0.0",
+
+    "description": "Provides a client for accessing ZooKeeper",
+    "licenses": ["The MIT License"],
+    "author": "EF Englishtown",
+    "keywords": ["zookeeper"]
+}

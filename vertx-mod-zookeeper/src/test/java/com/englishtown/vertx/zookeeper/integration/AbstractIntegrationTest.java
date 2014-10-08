@@ -32,7 +32,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
     public void start(Future<Void> startedResult) {
         try {
             setup();
-            super.start(startedResult);
+            zookeeperClient.onReady(aVoid -> super.start(startedResult));
         } catch (Throwable t) {
             startedResult.setFailure(t);
         }

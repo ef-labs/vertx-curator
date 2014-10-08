@@ -12,4 +12,8 @@ public interface ZooKeeperClient {
     CuratorFramework getCuratorFramework();
 
     void execute(ZooKeeperOperation operation, Handler<AsyncResult<CuratorEvent>> handler);
+
+    boolean initialized();
+
+    void onReady(Handler<Void> callback);
 }

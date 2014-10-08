@@ -13,24 +13,6 @@ public class BasicIntegrationTest extends AbstractIntegrationTest {
 
     private CuratorFramework curatorFramework;
 
-//    @Override
-//    public void start() {
-//        when = WhenFactory.createSync();
-//
-//        // Builders
-//        Provider<GetDataBuilder> getDataBuilderProvider = DefaultGetDataBuilder::new;
-//        ZooKeeperOperationBuilders zooKeeperOperationBuilders = new DefaultZooKeeperOperationBuilders(getDataBuilderProvider);
-//
-//        zookeeperClient = new DefaultZooKeeperClient(vertx);
-//        configuratorHelper = new DefaultConfiguratorHelper(container, when, zookeeperClient, zooKeeperOperationBuilders);
-//
-//        curatorFramework = CuratorFrameworkFactory.newClient("127.0.0.1:2181", new ExponentialBackoffRetry(100, 3));
-//        curatorFramework.start();
-//
-//        initialize();
-//        startTests();
-//    }
-
     @Override
     protected JsonObject createZooKeeperConfig() {
         JsonObject json = super.createZooKeeperConfig();

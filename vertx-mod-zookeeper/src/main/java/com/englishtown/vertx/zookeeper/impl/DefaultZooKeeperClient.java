@@ -12,6 +12,8 @@ import org.vertx.java.core.Vertx;
 import org.vertx.java.core.impl.DefaultFutureResult;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.curator.framework.CuratorFrameworkFactory.Builder;
 import static org.apache.curator.framework.CuratorFrameworkFactory.builder;
@@ -23,12 +25,14 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
     private CuratorFramework framework;
     private Vertx vertx;
     private final ZooKeeperConfigurator configurator;
+    private boolean initialized;
+    private List<Handler<Void>> onReadyCallbacks = new ArrayList<>();
 
     @Inject
     public DefaultZooKeeperClient(Vertx vertx, ZooKeeperConfigurator configurator) {
         this.vertx = vertx;
         this.configurator = configurator;
-        init();
+        configurator.onReady(aVoid -> init());
     }
 
     //TODO: Take the IP address from environment variable
@@ -44,6 +48,10 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
 
         framework = builder.build();
         framework.start();
+
+        initialized = true;
+        onReadyCallbacks.forEach(handler -> handler.handle(null));
+        onReadyCallbacks.clear();
     }
 
     @Override
@@ -57,6 +65,20 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
             operation.run(this, wrapHandler(handler));
         } catch (Exception e) {
             handler.handle(new DefaultFutureResult<>(e));
+        }
+    }
+
+    @Override
+    public boolean initialized() {
+        return initialized;
+    }
+
+    @Override
+    public void onReady(Handler<Void> callback) {
+        if (initialized()) {
+            callback.handle(null);
+        } else {
+            onReadyCallbacks.add(callback);
         }
     }
 

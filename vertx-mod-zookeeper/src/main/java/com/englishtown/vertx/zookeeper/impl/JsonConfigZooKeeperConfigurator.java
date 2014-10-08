@@ -3,6 +3,7 @@ package com.englishtown.vertx.zookeeper.impl;
 import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.*;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
@@ -128,5 +129,10 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     @Override
     public List<String> getPathPrefixes() {
         return pathPrefixes;
+    }
+
+    @Override
+    public void onReady(Handler<Void> callback) {
+        callback.handle(null);
     }
 }

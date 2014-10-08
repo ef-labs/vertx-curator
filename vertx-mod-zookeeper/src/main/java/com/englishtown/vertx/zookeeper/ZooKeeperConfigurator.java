@@ -1,6 +1,7 @@
 package com.englishtown.vertx.zookeeper;
 
 import org.apache.curator.RetryPolicy;
+import org.vertx.java.core.Handler;
 
 import java.util.List;
 
@@ -36,6 +37,8 @@ public interface ZooKeeperConfigurator {
      * @return
      */
     List<String> getPathPrefixes();
+
+    void onReady(Handler<Void> callback);
 
     public interface AuthPolicy {
 

@@ -122,7 +122,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     }
 
     /**
-     * Optional path prefixes used when getting data with the {@link com.englishtown.vertx.zookeeper.promises.ConfiguratorHelper}
+     * Optional path prefixes used when getting data with the {@link com.englishtown.vertx.zookeeper.ConfiguratorHelper}
      *
      * @return
      */

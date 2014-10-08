@@ -4,7 +4,8 @@ import com.englishtown.promises.When;
 import com.englishtown.vertx.promises.hk2.HK2WhenBinder;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
 import com.englishtown.vertx.zookeeper.hk2.HK2ZooKeeperBinder;
-import com.englishtown.vertx.zookeeper.promises.ConfiguratorHelper;
+import com.englishtown.vertx.zookeeper.hk2.WhenHK2ZooKeeperBinder;
+import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -23,7 +24,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
     protected ServiceLocator locator;
     protected When when;
     protected ZooKeeperClient zookeeperClient;
-    protected ConfiguratorHelper configuratorHelper;
+    protected WhenConfiguratorHelper configuratorHelper;
 
     /**
      * {@inheritDoc}
@@ -45,7 +46,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
         locator = ServiceLocatorFactory.getInstance().create(null);
 
-        ServiceLocatorUtilities.bind(locator, new HK2ZooKeeperBinder(), new HK2WhenBinder(), new AbstractBinder() {
+        ServiceLocatorUtilities.bind(locator, new WhenHK2ZooKeeperBinder(), new HK2WhenBinder(), new AbstractBinder() {
             @Override
             protected void configure() {
                 bind(vertx).to(Vertx.class);
@@ -55,7 +56,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
         when = locator.getService(When.class);
         zookeeperClient = locator.getService(ZooKeeperClient.class);
-        configuratorHelper = locator.getService(ConfiguratorHelper.class);
+        configuratorHelper = locator.getService(WhenConfiguratorHelper.class);
 
     }
 

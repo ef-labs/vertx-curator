@@ -2,10 +2,15 @@ package com.englishtown.vertx.zookeeper.integration;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.data.ACL;
 import org.junit.Test;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.VertxAssert;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  */
@@ -17,10 +22,15 @@ public class BasicIntegrationTest extends AbstractIntegrationTest {
     protected JsonObject createZooKeeperConfig() {
         JsonObject json = super.createZooKeeperConfig();
 
-        return json.putArray("path-prefixes", new JsonArray()
-                .addString("/test/env/dev/application")
-                .addString("/test/env/dev")
-                .addString("/test/global"));
+        return json
+                .putObject("auth", new JsonObject()
+                        .putString("scheme", "digest")
+                        .putString("username", "test_user")
+                        .putString("password", "test_user_password"))
+                .putArray("path-prefixes", new JsonArray()
+                        .addString("/test/env/dev/application")
+                        .addString("/test/env/dev")
+                        .addString("/test/global"));
     }
 
     @Override
@@ -28,9 +38,12 @@ public class BasicIntegrationTest extends AbstractIntegrationTest {
         super.setup();
         curatorFramework = zookeeperClient.getCuratorFramework();
 
+        List<ACL> acls = new ArrayList<>();
+        acls.add(new ACL(ZooDefs.Perms.ALL, ZooDefs.Ids.AUTH_IDS));
+
         curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/global/cassandra/seeds", "10.0.0.1,10.0.0.2".getBytes());
         curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/cassandra/seeds", "192.168.0.1,192.168.0.2".getBytes());
-        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/application/cassandra/seeds", "0.0.0.0".getBytes());
+        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).withACL(acls).forPath("/test/env/dev/application/cassandra/seeds", "0.0.0.0".getBytes());
     }
 
     @Override

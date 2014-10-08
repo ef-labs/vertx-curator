@@ -17,7 +17,7 @@ import javax.inject.Singleton;
 
 /**
  */
-public class ZooKeeperBinder extends AbstractBinder {
+public class HK2ZooKeeperBinder extends AbstractBinder {
 
     @Override
     protected void configure() {

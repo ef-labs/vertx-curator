@@ -63,7 +63,7 @@ public class BasicIntegrationTest extends AbstractIntegrationTest {
         configuratorHelper.getConfigElement("/cassandra/seeds").then(
                 element -> {
                     VertxAssert.assertNotNull(element);
-                    VertxAssert.assertEquals("0.0.0.0", new String(element));
+                    VertxAssert.assertEquals("0.0.0.0", element.asString());
 
                     // Assuming that is true then wipe out the application one and try again
                     try {
@@ -76,7 +76,7 @@ public class BasicIntegrationTest extends AbstractIntegrationTest {
         ).then(
                 element -> {
                     VertxAssert.assertNotNull(element);
-                    VertxAssert.assertEquals("192.168.0.1,192.168.0.2", new String(element));
+                    VertxAssert.assertEquals("192.168.0.1,192.168.0.2", element.asString());
 
                     // Now wipe out the environment znode and go again.
                     try {
@@ -89,7 +89,7 @@ public class BasicIntegrationTest extends AbstractIntegrationTest {
         ).then(
                 element -> {
                     VertxAssert.assertNotNull(element);
-                    VertxAssert.assertEquals("10.0.0.1,10.0.0.2", new String(element));
+                    VertxAssert.assertEquals("10.0.0.1,10.0.0.2", element.asString());
 
                     VertxAssert.testComplete();
 

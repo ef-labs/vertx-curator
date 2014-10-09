@@ -3,8 +3,7 @@ package com.englishtown.vertx.zookeeper.integration;
 import com.englishtown.promises.When;
 import com.englishtown.vertx.promises.hk2.HK2WhenBinder;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
-import com.englishtown.vertx.zookeeper.hk2.HK2ZooKeeperBinder;
-import com.englishtown.vertx.zookeeper.hk2.WhenHK2ZooKeeperBinder;
+import com.englishtown.vertx.zookeeper.hk2.HK2WhenZooKeeperBinder;
 import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
@@ -46,7 +45,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
         locator = ServiceLocatorFactory.getInstance().create(null);
 
-        ServiceLocatorUtilities.bind(locator, new WhenHK2ZooKeeperBinder(), new HK2WhenBinder(), new AbstractBinder() {
+        ServiceLocatorUtilities.bind(locator, new HK2WhenZooKeeperBinder(), new HK2WhenBinder(), new AbstractBinder() {
             @Override
             protected void configure() {
                 bind(vertx).to(Vertx.class);

@@ -9,7 +9,7 @@ import javax.inject.Singleton;
 /**
  * when.java HK2 bindings
  */
-public class WhenHK2ZooKeeperBinder extends AbstractBinder {
+public class HK2WhenZooKeeperBinder extends AbstractBinder {
 
     @Override
     protected void configure() {

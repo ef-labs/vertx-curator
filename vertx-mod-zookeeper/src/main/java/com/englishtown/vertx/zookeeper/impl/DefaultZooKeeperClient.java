@@ -25,22 +25,24 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
     private CuratorFramework framework;
     private Vertx vertx;
     private final ZooKeeperConfigurator configurator;
-    private boolean initialized;
+    private AsyncResult<Void> initResult;
     private List<Handler<AsyncResult<Void>>> onReadyCallbacks = new ArrayList<>();
 
     @Inject
     public DefaultZooKeeperClient(Vertx vertx, ZooKeeperConfigurator configurator) {
         this.vertx = vertx;
         this.configurator = configurator;
-        configurator.onReady(this::init);
+
+        configurator.onReady(result -> {
+            if (result.failed()) {
+                runOnReadyCallbacks(result);
+                return;
+            }
+            init(configurator);
+        });
     }
 
-    private void init(AsyncResult<Void> result) {
-
-        if (result.failed()) {
-            runOnReadyCallbacks(result);
-            return;
-        }
+    private void init(ZooKeeperConfigurator configurator) {
 
         Builder builder = builder()
                 .retryPolicy(configurator.getRetryPolicy())
@@ -54,12 +56,12 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
         framework = builder.build();
         framework.start();
 
-        initialized = true;
-        runOnReadyCallbacks(result);
+        runOnReadyCallbacks(new DefaultFutureResult<>((Void) null));
 
     }
 
     private void runOnReadyCallbacks(AsyncResult<Void> result) {
+        initResult = result;
         onReadyCallbacks.forEach(handler -> handler.handle(result));
         onReadyCallbacks.clear();
     }
@@ -80,13 +82,13 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
 
     @Override
     public boolean initialized() {
-        return initialized;
+        return initResult != null;
     }
 
     @Override
     public void onReady(Handler<AsyncResult<Void>> callback) {
-        if (initialized()) {
-            callback.handle(new DefaultFutureResult<>((Void) null));
+        if (initResult != null) {
+            callback.handle(initResult);
         } else {
             onReadyCallbacks.add(callback);
         }

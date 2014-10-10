@@ -5,6 +5,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.vertx.java.core.json.DecodeException;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -54,6 +55,17 @@ public class DefaultConfigElement implements ConfigElement {
             return new JsonObject(new String(bytesResult));
         } catch (DecodeException e) {
             throw new IllegalArgumentException("Cannot convert to a JSON Object");
+        }
+    }
+
+    @Override
+    public JsonArray asJsonArray() {
+        if (bytesResult == null) return null;
+
+        try {
+            return new JsonArray(new String(bytesResult));
+        } catch (DecodeException e) {
+            throw new IllegalArgumentException("Cannot convert to a JSON Array");
         }
     }
 

@@ -15,5 +15,5 @@ public interface ZooKeeperClient {
 
     boolean initialized();
 
-    void onReady(Handler<Void> callback);
+    void onReady(Handler<AsyncResult<Void>> callback);
 }

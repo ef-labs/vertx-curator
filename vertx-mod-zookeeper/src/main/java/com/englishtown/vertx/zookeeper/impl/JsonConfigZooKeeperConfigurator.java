@@ -3,7 +3,9 @@ package com.englishtown.vertx.zookeeper.impl;
 import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.*;
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
@@ -17,9 +19,10 @@ import java.util.List;
 public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
 
     private JsonObject config;
-    private RetryPolicy retryPolicy;
-    private AuthPolicy authPolicy;
-    private List<String> pathPrefixes;
+    protected String connectionString;
+    protected RetryPolicy retryPolicy;
+    protected AuthPolicy authPolicy;
+    protected List<String> pathPrefixes;
 
     @Inject
     public JsonConfigZooKeeperConfigurator(Container container) {
@@ -28,34 +31,42 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
 
     public JsonConfigZooKeeperConfigurator(JsonObject config) {
         this.config = config;
-        init();
+        init(config);
     }
 
-    protected void init() {
-        retryPolicy = initRetryPolicy();
-        authPolicy = initAuthPolicy();
-        pathPrefixes = initPathPrefixes();
+    protected void init(JsonObject config) {
+        connectionString = initConnectionString(config.getString("connection-string"));
+        retryPolicy = initRetryPolicy(config.getObject("retry"));
+        authPolicy = initAuthPolicy(config.getObject("auth"));
+        pathPrefixes = initPathPrefixes(config.getArray("path-prefixes"));
     }
 
-    protected RetryPolicy initRetryPolicy() {
+    protected String initConnectionString(String connectString) {
 
-        JsonObject json = config.getObject("retry");
+        if (connectString == null || connectString.isEmpty()) {
+            connectString = "127.0.0.1:2181";
+        }
 
-        if (json != null) {
-            String type = json.getString("type");
+        return connectString;
+    }
+
+    protected RetryPolicy initRetryPolicy(JsonObject retryConfig) {
+
+        if (retryConfig != null) {
+            String type = retryConfig.getString("type");
 
             if (RetryNTimes.class.getName().equalsIgnoreCase(type)) {
-                return new RetryNTimes(json.getInteger("n", 10), json.getInteger("sleep", 500));
+                return new RetryNTimes(retryConfig.getInteger("n", 10), retryConfig.getInteger("sleep", 500));
             } else if (RetryOneTime.class.getName().equalsIgnoreCase(type)) {
-                return new RetryOneTime(json.getInteger("sleep", 500));
+                return new RetryOneTime(retryConfig.getInteger("sleep", 500));
             } else if (RetryOneTime.class.getName().equalsIgnoreCase(type)) {
-                return new RetryOneTime(json.getInteger("sleep", 500));
+                return new RetryOneTime(retryConfig.getInteger("sleep", 500));
             } else if (RetryUntilElapsed.class.getName().equalsIgnoreCase(type)) {
-                return new RetryUntilElapsed(json.getInteger("max-elapsed", 5000), json.getInteger("sleep", 500));
+                return new RetryUntilElapsed(retryConfig.getInteger("max-elapsed", 5000), retryConfig.getInteger("sleep", 500));
             } else if (ExponentialBackoffRetry.class.getName().equalsIgnoreCase(type)) {
-                return new ExponentialBackoffRetry(json.getInteger("base-sleep", 500), json.getInteger("max-retries", 10));
+                return new ExponentialBackoffRetry(retryConfig.getInteger("base-sleep", 500), retryConfig.getInteger("max-retries", 10));
             } else if (BoundedExponentialBackoffRetry.class.getName().equalsIgnoreCase(type)) {
-                return new BoundedExponentialBackoffRetry(json.getInteger("base-sleep", 500), json.getInteger("max-sleep", 5000), json.getInteger("max-retries", 10));
+                return new BoundedExponentialBackoffRetry(retryConfig.getInteger("base-sleep", 500), retryConfig.getInteger("max-sleep", 5000), retryConfig.getInteger("max-retries", 10));
             }
         }
 
@@ -63,19 +74,17 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
 
     }
 
-    protected AuthPolicy initAuthPolicy() {
+    protected AuthPolicy initAuthPolicy(JsonObject authConfig) {
 
-        JsonObject json = config.getObject("auth");
-
-        if (json != null) {
-            String scheme = json.getString("scheme");
+        if (authConfig != null) {
+            String scheme = authConfig.getString("scheme");
             String auth;
             if ("digest".equalsIgnoreCase(scheme)) {
-                String username = json.getString("username");
-                String password = json.getString("password");
+                String username = authConfig.getString("username");
+                String password = authConfig.getString("password");
                 auth = username + ":" + password;
             } else {
-                auth = json.getString("auth");
+                auth = authConfig.getString("auth");
             }
 
             return new AuthPolicy() {
@@ -95,12 +104,10 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     }
 
     @SuppressWarnings("unchecked")
-    protected List<String> initPathPrefixes() {
+    protected List<String> initPathPrefixes(JsonArray pathConfig) {
 
-        JsonArray json = config.getArray("path-prefixes");
-
-        if (json != null) {
-            return json.toList();
+        if (pathConfig != null) {
+            return pathConfig.toList();
         }
 
         return null;
@@ -108,7 +115,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
 
     @Override
     public String getConnectionString() {
-        return config.getString("connection-string");
+        return connectionString;
     }
 
     @Override
@@ -132,7 +139,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     }
 
     @Override
-    public void onReady(Handler<Void> callback) {
-        callback.handle(null);
+    public void onReady(Handler<AsyncResult<Void>> callback) {
+        callback.handle(new DefaultFutureResult<>((Void) null));
     }
 }

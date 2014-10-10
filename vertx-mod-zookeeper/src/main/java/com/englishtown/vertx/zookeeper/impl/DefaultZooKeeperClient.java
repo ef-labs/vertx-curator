@@ -26,17 +26,22 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
     private Vertx vertx;
     private final ZooKeeperConfigurator configurator;
     private boolean initialized;
-    private List<Handler<Void>> onReadyCallbacks = new ArrayList<>();
+    private List<Handler<AsyncResult<Void>>> onReadyCallbacks = new ArrayList<>();
 
     @Inject
     public DefaultZooKeeperClient(Vertx vertx, ZooKeeperConfigurator configurator) {
         this.vertx = vertx;
         this.configurator = configurator;
-        configurator.onReady(aVoid -> init());
+        configurator.onReady(this::init);
     }
 
-    //TODO: Take the IP address from environment variable
-    private void init() {
+    private void init(AsyncResult<Void> result) {
+
+        if (result.failed()) {
+            runOnReadyCallbacks(result);
+            return;
+        }
+
         Builder builder = builder()
                 .retryPolicy(configurator.getRetryPolicy())
                 .connectString(configurator.getConnectionString());
@@ -50,7 +55,12 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
         framework.start();
 
         initialized = true;
-        onReadyCallbacks.forEach(handler -> handler.handle(null));
+        runOnReadyCallbacks(result);
+
+    }
+
+    private void runOnReadyCallbacks(AsyncResult<Void> result) {
+        onReadyCallbacks.forEach(handler -> handler.handle(result));
         onReadyCallbacks.clear();
     }
 
@@ -74,9 +84,9 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
     }
 
     @Override
-    public void onReady(Handler<Void> callback) {
+    public void onReady(Handler<AsyncResult<Void>> callback) {
         if (initialized()) {
-            callback.handle(null);
+            callback.handle(new DefaultFutureResult<>((Void) null));
         } else {
             onReadyCallbacks.add(callback);
         }

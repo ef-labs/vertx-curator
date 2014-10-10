@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
-    // TODO: Move to env var configurator implementation
+    // TODO: Move to EnvVarZooKeeperConfigurator implementation
 //    private static final String ZOOKEEPER_PATH_PREFIXES_ENVVAR = "zookeeper_path_prefixes";
 //    private static final String PATH_DELIMITER = "\\|";
 //    pathPrefixes.addAll(Arrays.asList(basePathsString.split(PATH_DELIMITER)));
@@ -41,7 +41,7 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
         this.zooKeeperOperationBuilders = zooKeeperOperationBuilders;
         this.vertx = vertx;
 
-        init(configurator);
+        configurator.onReady(result -> init(configurator));
     }
 
     private void init(ZooKeeperConfigurator configurator) {

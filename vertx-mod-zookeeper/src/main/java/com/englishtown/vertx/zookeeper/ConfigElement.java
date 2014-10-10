@@ -1,6 +1,7 @@
 package com.englishtown.vertx.zookeeper;
 
 import org.apache.curator.framework.api.CuratorEvent;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -44,6 +45,16 @@ public interface ConfigElement {
      * @return JsonObject
      */
     JsonObject asJsonObject();
+
+    /**
+     * Will attempt to convert this configuration element into an {@link org.vertx.java.core.json.JsonArray}.
+     * If conversion isn't possible then an {@link java.lang.IllegalArgumentException} will be thrown.
+     *
+     * If the original result is null, this method will also return null.
+     *
+     * @return JsonObject
+     */
+    JsonArray asJsonArray();
 
     /**
      * Will attempt to convert this configuration element into a boolean. Conversion is not considered possible if the

@@ -3,10 +3,8 @@ package com.englishtown.vertx.zookeeper.guice;
 import com.englishtown.vertx.zookeeper.ConfiguratorHelper;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
 import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
-import com.englishtown.vertx.zookeeper.builders.GetDataBuilder;
-import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
-import com.englishtown.vertx.zookeeper.builders.impl.DefaultGetDataBuilder;
-import com.englishtown.vertx.zookeeper.builders.impl.DefaultZooKeeperOperationBuilders;
+import com.englishtown.vertx.zookeeper.builders.*;
+import com.englishtown.vertx.zookeeper.builders.impl.*;
 import com.englishtown.vertx.zookeeper.impl.DefaultConfiguratorHelper;
 import com.englishtown.vertx.zookeeper.impl.DefaultZooKeeperClient;
 import com.englishtown.vertx.zookeeper.impl.JsonConfigZooKeeperConfigurator;
@@ -29,6 +27,10 @@ public class GuiceZooKeeperBinder extends AbstractModule {
         // The builders
         bind(ZooKeeperOperationBuilders.class).to(DefaultZooKeeperOperationBuilders.class).in(Singleton.class);
         bind(GetDataBuilder.class).to(DefaultGetDataBuilder.class);
+        bind(GetChildrenBuilder.class).to(DefaultGetChildrenBuilder.class);
+        bind(CreateBuilder.class).to(DefaultCreateBuilder.class);
+        bind(DeleteBuilder.class).to(DefaultDeleteBuilder.class);
+        bind(GetACLBuilder.class).to(DefaultGetACLBuilder.class);
 
     }
 }

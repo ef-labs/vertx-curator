@@ -3,6 +3,7 @@ package com.englishtown.vertx.zookeeper.impl;
 import com.englishtown.vertx.zookeeper.*;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import org.apache.curator.framework.api.CuratorEvent;
+import org.apache.curator.framework.api.CuratorWatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.AsyncResult;
@@ -56,6 +57,11 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
     @Override
     public void getConfigElement(String elementPath, Handler<AsyncResult<ConfigElement>> callback) {
+        getConfigElement(elementPath, null, callback);
+    }
+
+    @Override
+    public void getConfigElement(String elementPath, CuratorWatcher watcher, Handler<AsyncResult<ConfigElement>> callback) {
 
         if (elementPath == null) {
             callback.handle(new DefaultFutureResult<>(new IllegalArgumentException("null elementPath")));
@@ -75,6 +81,7 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
             String path = pathPrefixes.get(i) + elementPath;
 
             ZooKeeperOperation operation = zooKeeperOperationBuilders.getData()
+                    .usingWatcher(watcher)
                     .forPath(path)
                     .build();
 

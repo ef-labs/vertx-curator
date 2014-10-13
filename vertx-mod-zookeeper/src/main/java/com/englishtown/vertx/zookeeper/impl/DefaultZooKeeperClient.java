@@ -5,11 +5,14 @@ import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorEvent;
+import org.apache.curator.framework.api.CuratorWatcher;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Context;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.impl.DefaultFutureResult;
+import org.vertx.java.core.logging.Logger;
+import org.vertx.java.core.logging.impl.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -22,11 +25,14 @@ import static org.apache.curator.framework.CuratorFrameworkFactory.builder;
  */
 public class DefaultZooKeeperClient implements ZooKeeperClient {
 
-    private CuratorFramework framework;
-    private Vertx vertx;
+    private final Vertx vertx;
     private final ZooKeeperConfigurator configurator;
+    private final List<Handler<AsyncResult<Void>>> onReadyCallbacks = new ArrayList<>();
+
+    private CuratorFramework framework;
     private AsyncResult<Void> initResult;
-    private List<Handler<AsyncResult<Void>>> onReadyCallbacks = new ArrayList<>();
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultZooKeeperClient.class);
 
     @Inject
     public DefaultZooKeeperClient(Vertx vertx, ZooKeeperConfigurator configurator) {
@@ -74,7 +80,7 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
     @Override
     public void execute(ZooKeeperOperation operation, Handler<AsyncResult<CuratorEvent>> handler) {
         try {
-            operation.run(this, wrapHandler(handler));
+            operation.execute(this, wrapHandler(handler));
         } catch (Exception e) {
             handler.handle(new DefaultFutureResult<>(e));
         }
@@ -92,6 +98,21 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
         } else {
             onReadyCallbacks.add(callback);
         }
+    }
+
+    @Override
+    public CuratorWatcher wrapWatcher(CuratorWatcher watcher) {
+        Context context = vertx.currentContext();
+
+        return event -> {
+            context.runOnContext(aVoid -> {
+                try {
+                    watcher.process(event);
+                } catch (Exception e) {
+                    logger.warn("CuratorWatcher threw an exception", e);
+                }
+            });
+        };
     }
 
     private Handler<AsyncResult<CuratorEvent>> wrapHandler(Handler<AsyncResult<CuratorEvent>> toWrap) {

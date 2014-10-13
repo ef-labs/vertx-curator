@@ -3,8 +3,10 @@ package com.englishtown.vertx.zookeeper.integration;
 import com.englishtown.promises.When;
 import com.englishtown.vertx.promises.hk2.HK2WhenBinder;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
+import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import com.englishtown.vertx.zookeeper.hk2.HK2WhenZooKeeperBinder;
 import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
+import com.englishtown.vertx.zookeeper.promises.WhenZooKeeperClient;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -14,6 +16,10 @@ import org.vertx.java.core.Vertx;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 import org.vertx.testtools.TestVerticle;
+import org.vertx.testtools.VertxAssert;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Base zookeeper integration tests
@@ -23,7 +29,10 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
     protected ServiceLocator locator;
     protected When when;
     protected ZooKeeperClient zookeeperClient;
+    protected WhenZooKeeperClient whenZookeeperClient;
+    protected ZooKeeperOperationBuilders operationBuilders;
     protected WhenConfiguratorHelper configuratorHelper;
+    protected List<String> teardownPaths = new ArrayList<>();
 
     /**
      * {@inheritDoc}
@@ -31,14 +40,14 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
     @Override
     public void start(Future<Void> startedResult) {
         try {
-            setup();
+            setUp();
             zookeeperClient.onReady(aVoid -> super.start(startedResult));
         } catch (Throwable t) {
             startedResult.setFailure(t);
         }
     }
 
-    protected void setup() throws Exception {
+    protected void setUp() throws Exception {
 
         // Add required zookeeper config
         container.config().putObject("zookeeper", createZooKeeperConfig());
@@ -55,7 +64,27 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
         when = locator.getService(When.class);
         zookeeperClient = locator.getService(ZooKeeperClient.class);
+        whenZookeeperClient = locator.getService(WhenZooKeeperClient.class);
+        operationBuilders = locator.getService(ZooKeeperOperationBuilders.class);
         configuratorHelper = locator.getService(WhenConfiguratorHelper.class);
+
+    }
+
+    @Override
+    public void stop() {
+        tearDown();
+        zookeeperClient.getCuratorFramework().close();
+    }
+
+    protected void tearDown() {
+
+        for (String path : teardownPaths) {
+            try {
+                zookeeperClient.getCuratorFramework().delete().deletingChildrenIfNeeded().forPath(path);
+            } catch (Exception e) {
+                VertxAssert.handleThrowable(e);
+            }
+        }
 
     }
 

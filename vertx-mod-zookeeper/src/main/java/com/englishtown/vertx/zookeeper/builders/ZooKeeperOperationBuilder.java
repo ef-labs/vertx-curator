@@ -4,9 +4,8 @@ import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 
 /**
  */
-public interface ZooKeeperOperationBuilder<T> {
-
-    T forPath(String path);
+public interface ZooKeeperOperationBuilder {
 
     ZooKeeperOperation build();
+
 }

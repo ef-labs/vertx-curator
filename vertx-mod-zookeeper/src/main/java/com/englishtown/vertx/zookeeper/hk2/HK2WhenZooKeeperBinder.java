@@ -1,7 +1,9 @@
 package com.englishtown.vertx.zookeeper.hk2;
 
 import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
+import com.englishtown.vertx.zookeeper.promises.WhenZooKeeperClient;
 import com.englishtown.vertx.zookeeper.promises.impl.DefaultWhenConfiguratorHelper;
+import com.englishtown.vertx.zookeeper.promises.impl.DefaultWhenZooKeeperClient;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import javax.inject.Singleton;
@@ -18,6 +20,7 @@ public class HK2WhenZooKeeperBinder extends AbstractBinder {
 
         // Promise bindings
         bind(DefaultWhenConfiguratorHelper.class).to(WhenConfiguratorHelper.class).in(Singleton.class);
+        bind(DefaultWhenZooKeeperClient.class).to(WhenZooKeeperClient.class).in(Singleton.class);
 
     }
 }

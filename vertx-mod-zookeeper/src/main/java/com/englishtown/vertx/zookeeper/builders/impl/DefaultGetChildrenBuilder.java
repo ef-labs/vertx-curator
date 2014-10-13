@@ -1,19 +1,20 @@
 package com.englishtown.vertx.zookeeper.builders.impl;
 
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
-import com.englishtown.vertx.zookeeper.builders.GetDataBuilder;
+import com.englishtown.vertx.zookeeper.builders.GetChildrenBuilder;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.vertx.java.core.impl.DefaultFutureResult;
 
 /**
- * Default implementation of {@link com.englishtown.vertx.zookeeper.builders.GetDataBuilder}
+ * Default implementation of {@link com.englishtown.vertx.zookeeper.builders.GetChildrenBuilder}
  */
-public class DefaultGetDataBuilder extends AbstractOperationBuilder<GetDataBuilder> implements GetDataBuilder {
+public class DefaultGetChildrenBuilder extends AbstractOperationBuilder<GetChildrenBuilder> implements GetChildrenBuilder {
 
     @Override
     public ZooKeeperOperation build(String path, CuratorWatcher watcher) {
         return (client, handler) -> {
-            org.apache.curator.framework.api.GetDataBuilder builder = client.getCuratorFramework().getData();
+
+            org.apache.curator.framework.api.GetChildrenBuilder builder = client.getCuratorFramework().getChildren();
 
             if (watcher != null) {
                 builder.usingWatcher(client.wrapWatcher(watcher));

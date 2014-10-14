@@ -8,16 +8,16 @@ import java.util.List;
 /**
  * ZooKeeper operation builder to create a z-node
  */
-public interface CreateBuilder extends ZooKeeperOperationBuilder, Pathable<CreateBuilder> {
+public interface CreateBuilder extends
+        ZooKeeperOperationBuilder,
+        Pathable<CreateBuilder>,
+        ACLable<CreateBuilder>,
+        Dataable<CreateBuilder> {
 
     CreateBuilder creatingParentsIfNeeded();
 
     CreateBuilder withMode(CreateMode mode);
 
-    CreateBuilder withACL(List<ACL> aclList);
-
     CreateBuilder withProtection();
-
-    CreateBuilder data(byte[] data);
 
 }

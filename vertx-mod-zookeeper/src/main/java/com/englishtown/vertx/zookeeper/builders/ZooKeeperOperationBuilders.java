@@ -1,6 +1,7 @@
 package com.englishtown.vertx.zookeeper.builders;
 
 /**
+ * ZooKeeper operation builder factory
  */
 public interface ZooKeeperOperationBuilders {
 
@@ -8,9 +9,15 @@ public interface ZooKeeperOperationBuilders {
 
     GetDataBuilder getData();
 
+    SetDataBuilder setData();
+
     GetACLBuilder getACL();
 
+    SetACLBuilder setACL();
+
     GetChildrenBuilder getChildren();
+
+    ExistsBuilder checkExists();
 
     DeleteBuilder delete();
 

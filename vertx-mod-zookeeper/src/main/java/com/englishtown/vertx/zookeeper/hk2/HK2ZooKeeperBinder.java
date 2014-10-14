@@ -24,13 +24,16 @@ public class HK2ZooKeeperBinder extends AbstractBinder {
         bind(DefaultConfiguratorHelper.class).to(ConfiguratorHelper.class).in(Singleton.class);
         bind(JsonConfigZooKeeperConfigurator.class).to(ZooKeeperConfigurator.class).in(Singleton.class);
 
-        // The builders
+        // Operation builders
         bind(DefaultZooKeeperOperationBuilders.class).to(ZooKeeperOperationBuilders.class).in(Singleton.class);
-        bind(DefaultGetDataBuilder.class).to(GetDataBuilder.class);
-        bind(DefaultGetChildrenBuilder.class).to(GetChildrenBuilder.class);
         bind(DefaultCreateBuilder.class).to(CreateBuilder.class);
-        bind(DefaultDeleteBuilder.class).to(DeleteBuilder.class);
+        bind(DefaultGetDataBuilder.class).to(GetDataBuilder.class);
+        bind(DefaultSetDataBuilder.class).to(SetDataBuilder.class);
+        bind(DefaultGetChildrenBuilder.class).to(GetChildrenBuilder.class);
         bind(DefaultGetACLBuilder.class).to(GetACLBuilder.class);
+        bind(DefaultSetACLBuilder.class).to(SetACLBuilder.class);
+        bind(DefaultExistsBuilder.class).to(ExistsBuilder.class);
+        bind(DefaultDeleteBuilder.class).to(DeleteBuilder.class);
 
     }
 }

@@ -6,6 +6,7 @@ import com.englishtown.promises.When;
 import com.englishtown.vertx.zookeeper.ConfigElement;
 import com.englishtown.vertx.zookeeper.ConfiguratorHelper;
 import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
+import org.apache.curator.framework.api.CuratorWatcher;
 
 import javax.inject.Inject;
 
@@ -25,10 +26,15 @@ public class DefaultWhenConfiguratorHelper implements WhenConfiguratorHelper {
 
     @Override
     public Promise<ConfigElement> getConfigElement(String path) {
+        return getConfigElement(path, null);
+    }
+
+    @Override
+    public Promise<ConfigElement> getConfigElement(String path, CuratorWatcher watcher) {
 
         Deferred<ConfigElement> d = when.defer();
 
-        configuratorHelper.getConfigElement(path, result -> {
+        configuratorHelper.getConfigElement(path, watcher, result -> {
             if (result.succeeded()) {
                 d.resolve(result.result());
             } else {

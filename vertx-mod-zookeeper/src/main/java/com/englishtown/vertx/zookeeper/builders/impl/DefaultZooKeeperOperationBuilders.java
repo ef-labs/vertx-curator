@@ -11,21 +11,29 @@ public class DefaultZooKeeperOperationBuilders implements ZooKeeperOperationBuil
 
     private final Provider<CreateBuilder> createBuilderProvider;
     private final Provider<GetDataBuilder> getDataBuilderProvider;
+    private final Provider<SetDataBuilder> setDataBuilderProvider;
     private final Provider<GetACLBuilder> getACLBuilderProvider;
+    private final Provider<SetACLBuilder> setACLBuilderProvider;
     private final Provider<GetChildrenBuilder> getChildrenBuilderProvider;
+    private final Provider<ExistsBuilder> existsBuilderProvider;
     private final Provider<DeleteBuilder> deleteBuilderProvider;
 
     @Inject
     public DefaultZooKeeperOperationBuilders(
             Provider<CreateBuilder> createBuilderProvider,
             Provider<GetDataBuilder> getDataBuilderProvider,
+            Provider<SetDataBuilder> setDataBuilderProvider,
             Provider<GetACLBuilder> getACLBuilderProvider,
+            Provider<SetACLBuilder> setACLBuilderProvider,
             Provider<GetChildrenBuilder> getChildrenBuilderProvider,
-            Provider<DeleteBuilder> deleteBuilderProvider) {
+            Provider<ExistsBuilder> existsBuilderProvider, Provider<DeleteBuilder> deleteBuilderProvider) {
         this.createBuilderProvider = createBuilderProvider;
         this.getDataBuilderProvider = getDataBuilderProvider;
+        this.setDataBuilderProvider = setDataBuilderProvider;
         this.getACLBuilderProvider = getACLBuilderProvider;
+        this.setACLBuilderProvider = setACLBuilderProvider;
         this.getChildrenBuilderProvider = getChildrenBuilderProvider;
+        this.existsBuilderProvider = existsBuilderProvider;
         this.deleteBuilderProvider = deleteBuilderProvider;
     }
 
@@ -40,13 +48,28 @@ public class DefaultZooKeeperOperationBuilders implements ZooKeeperOperationBuil
     }
 
     @Override
+    public SetDataBuilder setData() {
+        return setDataBuilderProvider.get();
+    }
+
+    @Override
     public GetACLBuilder getACL() {
         return getACLBuilderProvider.get();
     }
 
     @Override
+    public SetACLBuilder setACL() {
+        return setACLBuilderProvider.get();
+    }
+
+    @Override
     public GetChildrenBuilder getChildren() {
         return getChildrenBuilderProvider.get();
+    }
+
+    @Override
+    public ExistsBuilder checkExists() {
+        return existsBuilderProvider.get();
     }
 
     @Override

@@ -92,7 +92,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
                 .then(ce -> {
                     VertxAssert.assertEquals(CuratorEventType.GET_ACL, ce.getType());
                     List<ACL> list = ce.getACLList();
-                    VertxAssert.assertEquals(1, list.size());
+                    VertxAssert.assertTrue(list.size() >= 1);
                     ACL acl = list.get(0);
                     VertxAssert.assertEquals(ZooDefs.Perms.ALL, acl.getPerms());
                     VertxAssert.assertEquals("digest", acl.getId().getScheme());
@@ -208,14 +208,15 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
         String path2 = path + "/acl2";
 
         String id = DigestAuthenticationProvider.generateDigest("test_user2:password2");
-        ACL acl = new ACL(ZooDefs.Perms.ALL, new Id("digest", id));
+        ACL currentUserAcl = new ACL(ZooDefs.Perms.ALL, ZooDefs.Ids.AUTH_IDS);
+        ACL testUser2Acl = new ACL(ZooDefs.Perms.ALL, new Id("digest", id));
 
         CreateBuilder create = operationBuilders.create()
                 .withMode(CreateMode.EPHEMERAL)
                 .creatingParentsIfNeeded();
 
         promises.add(whenZookeeperClient.execute(create.withACL(ZooDefs.Ids.CREATOR_ALL_ACL).forPath(path1).build()));
-        promises.add(whenZookeeperClient.execute(create.withACL(Arrays.asList(acl)).forPath(path2).build()));
+        promises.add(whenZookeeperClient.execute(create.withACL(Arrays.asList(testUser2Acl, currentUserAcl)).forPath(path2).build()));
 
         when.all(promises)
                 .then(events -> {
@@ -234,8 +235,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
                     CuratorEvent ce2 = events.get(1);
 
                     VertxAssert.assertNotNull(ce1.getData());
-                    VertxAssert.assertNull(ce2.getData());
-                    VertxAssert.assertTrue(ce2.getResultCode() != 0);
+                    VertxAssert.assertNotNull(ce2.getData());
 
                     promises.clear();
                     promises.add(whenZookeeperClient.execute(operationBuilders.getACL().forPath(path1).build()));
@@ -250,13 +250,13 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
                     CuratorEvent ce2 = events.get(1);
 
                     VertxAssert.assertNotNull(ce1.getACLList());
-                    VertxAssert.assertEquals(1, ce1.getACLList().size());
+                    VertxAssert.assertTrue(ce1.getACLList().size() >= 1);
                     ACL acl1 = ce1.getACLList().get(0);
                     VertxAssert.assertEquals("digest", acl1.getId().getScheme());
                     VertxAssert.assertTrue(acl1.getId().getId().startsWith("test_user:"));
 
                     VertxAssert.assertNotNull(ce2.getACLList());
-                    VertxAssert.assertEquals(1, ce2.getACLList().size());
+                    VertxAssert.assertTrue(ce2.getACLList().size() >= 2);
                     ACL acl2 = ce2.getACLList().get(0);
                     VertxAssert.assertEquals("digest", acl2.getId().getScheme());
                     VertxAssert.assertTrue(acl2.getId().getId().startsWith("test_user2:"));

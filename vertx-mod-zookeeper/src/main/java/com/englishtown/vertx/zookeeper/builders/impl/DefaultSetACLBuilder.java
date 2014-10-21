@@ -2,6 +2,7 @@ package com.englishtown.vertx.zookeeper.builders.impl;
 
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import com.englishtown.vertx.zookeeper.builders.SetACLBuilder;
+import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.data.ACL;
 import org.vertx.java.core.impl.DefaultFutureResult;
 
@@ -40,6 +41,8 @@ public class DefaultSetACLBuilder implements SetACLBuilder {
         Integer version = this.version;
         List<ACL> aclList = this.aclList;
         String path = this.path;
+
+        PathUtils.validatePath(path);
 
         return (client, handler) -> {
             org.apache.curator.framework.api.SetACLBuilder builder = client.getCuratorFramework().setACL();

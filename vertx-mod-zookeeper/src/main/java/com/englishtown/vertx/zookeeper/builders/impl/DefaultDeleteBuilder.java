@@ -2,6 +2,7 @@ package com.englishtown.vertx.zookeeper.builders.impl;
 
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import com.englishtown.vertx.zookeeper.builders.DeleteBuilder;
+import org.apache.zookeeper.common.PathUtils;
 import org.vertx.java.core.impl.DefaultFutureResult;
 
 /**
@@ -45,6 +46,8 @@ public class DefaultDeleteBuilder implements DeleteBuilder {
         boolean guaranteed = this.guaranteed;
         Integer version = this.version;
         String path = this.path;
+
+        PathUtils.validatePath(path);
 
         return (client, handler) -> {
             org.apache.curator.framework.api.DeleteBuilder builder = client.getCuratorFramework().delete();

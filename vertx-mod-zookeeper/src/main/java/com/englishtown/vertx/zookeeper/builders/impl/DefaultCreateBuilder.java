@@ -3,6 +3,7 @@ package com.englishtown.vertx.zookeeper.builders.impl;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import com.englishtown.vertx.zookeeper.builders.CreateBuilder;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.data.ACL;
 import org.vertx.java.core.impl.DefaultFutureResult;
 
@@ -65,6 +66,8 @@ public class DefaultCreateBuilder implements CreateBuilder {
         boolean withProtection = this.withProtection;
         byte[] data = this.data;
         String path = this.path;
+
+        PathUtils.validatePath(path);
 
         return (client, handler) -> {
             org.apache.curator.framework.api.CreateBuilder builder = client.getCuratorFramework()

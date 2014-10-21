@@ -5,6 +5,7 @@ import com.englishtown.vertx.zookeeper.builders.Pathable;
 import com.englishtown.vertx.zookeeper.builders.Watchable;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilder;
 import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.zookeeper.common.PathUtils;
 
 /**
  * Abstract builder for zookeeper operation pathable watchable builders
@@ -18,6 +19,7 @@ public abstract class AbstractOperationBuilder<T> implements ZooKeeperOperationB
 
     @Override
     public ZooKeeperOperation build() {
+        PathUtils.validatePath(path);
         return build(path, watcher);
     }
 

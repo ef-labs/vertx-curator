@@ -1,6 +1,8 @@
 package com.englishtown.vertx.zookeeper.integration;
 
+import com.englishtown.promises.Promise;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
+import com.englishtown.vertx.zookeeper.builders.CreateBuilder;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorEventType;
 import org.apache.curator.framework.api.CuratorWatcher;
@@ -8,11 +10,14 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Id;
+import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import org.junit.Test;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.VertxAssert;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +33,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
     protected void setUp() throws Exception {
         super.setUp();
 
+        tearDownPaths.add(path);
         acls.add(new ACL(ZooDefs.Perms.ALL, ZooDefs.Ids.AUTH_IDS));
     }
 
@@ -109,7 +115,6 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
     @Test
     public void testGetChildren() throws Exception {
 
-        teardownPaths.add(path);
 
         zookeeperClient.getCuratorFramework().create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path + "/child1");
         zookeeperClient.getCuratorFramework().create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path + "/child2");
@@ -148,8 +153,6 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
                 .data(data.getBytes())
                 .withACL(acls)
                 .build();
-
-        teardownPaths.add(path);
 
         zookeeperClient.execute(operation, result1 -> {
             if (result1.failed()) {
@@ -194,6 +197,78 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
             VertxAssert.testComplete();
 
         });
+    }
+
+    @Test
+    public void testACLs() throws Exception {
+
+        List<Promise<CuratorEvent>> promises = new ArrayList<>();
+
+        String path1 = path + "/acl1";
+        String path2 = path + "/acl2";
+
+        String id = DigestAuthenticationProvider.generateDigest("test_user2:password2");
+        ACL acl = new ACL(ZooDefs.Perms.ALL, new Id("digest", id));
+
+        CreateBuilder create = operationBuilders.create()
+                .withMode(CreateMode.EPHEMERAL)
+                .creatingParentsIfNeeded();
+
+        promises.add(whenZookeeperClient.execute(create.withACL(ZooDefs.Ids.CREATOR_ALL_ACL).forPath(path1).build()));
+        promises.add(whenZookeeperClient.execute(create.withACL(Arrays.asList(acl)).forPath(path2).build()));
+
+        when.all(promises)
+                .then(events -> {
+                    VertxAssert.assertEquals(2, events.size());
+
+                    promises.clear();
+                    promises.add(whenZookeeperClient.execute(operationBuilders.getData().forPath(path1).build()));
+                    promises.add(whenZookeeperClient.execute(operationBuilders.getData().forPath(path2).build()));
+
+                    return when.all(promises);
+                })
+                .then(events -> {
+                    VertxAssert.assertEquals(2, events.size());
+
+                    CuratorEvent ce1 = events.get(0);
+                    CuratorEvent ce2 = events.get(1);
+
+                    VertxAssert.assertNotNull(ce1.getData());
+                    VertxAssert.assertNull(ce2.getData());
+                    VertxAssert.assertTrue(ce2.getResultCode() != 0);
+
+                    promises.clear();
+                    promises.add(whenZookeeperClient.execute(operationBuilders.getACL().forPath(path1).build()));
+                    promises.add(whenZookeeperClient.execute(operationBuilders.getACL().forPath(path2).build()));
+
+                    return when.all(promises);
+                })
+                .then(events -> {
+                    VertxAssert.assertEquals(2, events.size());
+
+                    CuratorEvent ce1 = events.get(0);
+                    CuratorEvent ce2 = events.get(1);
+
+                    VertxAssert.assertNotNull(ce1.getACLList());
+                    VertxAssert.assertEquals(1, ce1.getACLList().size());
+                    ACL acl1 = ce1.getACLList().get(0);
+                    VertxAssert.assertEquals("digest", acl1.getId().getScheme());
+                    VertxAssert.assertTrue(acl1.getId().getId().startsWith("test_user:"));
+
+                    VertxAssert.assertNotNull(ce2.getACLList());
+                    VertxAssert.assertEquals(1, ce2.getACLList().size());
+                    ACL acl2 = ce2.getACLList().get(0);
+                    VertxAssert.assertEquals("digest", acl2.getId().getScheme());
+                    VertxAssert.assertTrue(acl2.getId().getId().startsWith("test_user2:"));
+
+                    VertxAssert.testComplete();
+                    return null;
+                })
+                .otherwise(t -> {
+                    VertxAssert.handleThrowable(t);
+                    VertxAssert.fail();
+                    return null;
+                });
     }
 
 }

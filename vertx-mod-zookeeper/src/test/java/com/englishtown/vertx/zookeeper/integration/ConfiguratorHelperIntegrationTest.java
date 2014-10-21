@@ -17,7 +17,7 @@ public class ConfiguratorHelperIntegrationTest extends AbstractIntegrationTest {
     protected JsonObject createZooKeeperConfig() {
         JsonObject json = super.createZooKeeperConfig();
 
-        return json.putArray("path-prefixes", new JsonArray()
+        return json.putArray("path_prefixes", new JsonArray()
                 .addString("/test/env/dev/application")
                 .addString("/test/env/dev")
                 .addString("/test/global"));
@@ -29,19 +29,19 @@ public class ConfiguratorHelperIntegrationTest extends AbstractIntegrationTest {
         curatorFramework = zookeeperClient.getCuratorFramework();
 
         curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/global/cassandra/seeds", "10.0.0.1,10.0.0.2".getBytes());
-        teardownPaths.add("/test/global/cassandra/seeds");
+        tearDownPaths.add("/test/global/cassandra/seeds");
         curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/cassandra/seeds", "192.168.0.1,192.168.0.2".getBytes());
-        teardownPaths.add("\"/test/env/dev/cassandra/seeds");
+        tearDownPaths.add("/test/env/dev/cassandra/seeds");
         curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/application/cassandra/seeds", "0.0.0.0".getBytes());
-        teardownPaths.add("/test/env/dev/application/cassandra/seeds");
+        tearDownPaths.add("/test/env/dev/application/cassandra/seeds");
     }
 
     @Test
     public void testReadingTheApplicationConfigValue() throws Exception {
 
         // First time we try and get the seeds variable, it should return 0.0.0.0
-        configuratorHelper.getConfigElement("/cassandra/seeds").then(
-                element -> {
+        configuratorHelper.getConfigElement("/cassandra/seeds")
+                .then(element -> {
                     VertxAssert.assertNotNull(element);
                     VertxAssert.assertEquals("0.0.0.0", element.asString());
 
@@ -52,9 +52,8 @@ public class ConfiguratorHelperIntegrationTest extends AbstractIntegrationTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                }
-        ).then(
-                element -> {
+                })
+                .then(element -> {
                     VertxAssert.assertNotNull(element);
                     VertxAssert.assertEquals("192.168.0.1,192.168.0.2", element.asString());
 
@@ -65,24 +64,21 @@ public class ConfiguratorHelperIntegrationTest extends AbstractIntegrationTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                }
-        ).then(
-                element -> {
+                })
+                .then(element -> {
                     VertxAssert.assertNotNull(element);
                     VertxAssert.assertEquals("10.0.0.1,10.0.0.2", element.asString());
 
                     VertxAssert.testComplete();
 
                     return null;
-                }
-        ).otherwise(
-                t -> {
+                })
+                .otherwise(t -> {
                     VertxAssert.handleThrowable(t);
                     VertxAssert.fail();
 
                     return null;
-                }
-        );
+                });
     }
 
 }

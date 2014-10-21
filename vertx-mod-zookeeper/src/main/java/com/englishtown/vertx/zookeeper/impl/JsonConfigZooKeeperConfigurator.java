@@ -1,7 +1,12 @@
 package com.englishtown.vertx.zookeeper.impl;
 
 import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
+import com.google.common.base.Strings;
 import org.apache.curator.RetryPolicy;
+import org.apache.curator.ensemble.EnsembleProvider;
+import org.apache.curator.ensemble.exhibitor.DefaultExhibitorRestClient;
+import org.apache.curator.ensemble.exhibitor.ExhibitorEnsembleProvider;
+import org.apache.curator.ensemble.exhibitor.Exhibitors;
 import org.apache.curator.retry.*;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
@@ -23,6 +28,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     protected RetryPolicy retryPolicy;
     protected AuthPolicy authPolicy;
     protected List<String> pathPrefixes;
+    protected EnsembleProvider ensembleProvider;
 
     @Inject
     public JsonConfigZooKeeperConfigurator(Container container) {
@@ -35,46 +41,55 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     }
 
     protected void init(JsonObject config) {
-        connectionString = initConnectionString(config.getString("connection-string"));
-        retryPolicy = initRetryPolicy(config.getObject("retry"));
-        authPolicy = initAuthPolicy(config.getObject("auth"));
-        pathPrefixes = initPathPrefixes(config.getArray("path-prefixes"));
+        initConnectionString(config);
+        initRetryPolicy(config.getObject("retry"));
+        initAuthPolicy(config.getObject("auth"));
+        initPathPrefixes(config.getArray("path_prefixes"));
+        initEnsembleProvider(config.getObject("ensemble"));
     }
 
-    protected String initConnectionString(String connectString) {
+    protected void initConnectionString(JsonObject config) {
 
-        if (connectString == null || connectString.isEmpty()) {
-            connectString = "127.0.0.1:2181";
+        String connectionString = config.getString("connection_string");
+
+        if (connectionString == null || connectionString.isEmpty()) {
+            connectionString = "127.0.0.1:2181";
         }
 
-        return connectString;
+        this.connectionString = connectionString;
     }
 
-    protected RetryPolicy initRetryPolicy(JsonObject retryConfig) {
+    protected void initRetryPolicy(JsonObject retryConfig) {
+
+        RetryPolicy retryPolicy = null;
 
         if (retryConfig != null) {
             String type = retryConfig.getString("type");
 
             if (RetryNTimes.class.getName().equalsIgnoreCase(type)) {
-                return new RetryNTimes(retryConfig.getInteger("n", 10), retryConfig.getInteger("sleep", 500));
+                retryPolicy = new RetryNTimes(retryConfig.getInteger("n", 10), retryConfig.getInteger("sleep", 500));
             } else if (RetryOneTime.class.getName().equalsIgnoreCase(type)) {
-                return new RetryOneTime(retryConfig.getInteger("sleep", 500));
+                retryPolicy = new RetryOneTime(retryConfig.getInteger("sleep", 500));
             } else if (RetryOneTime.class.getName().equalsIgnoreCase(type)) {
-                return new RetryOneTime(retryConfig.getInteger("sleep", 500));
+                retryPolicy = new RetryOneTime(retryConfig.getInteger("sleep", 500));
             } else if (RetryUntilElapsed.class.getName().equalsIgnoreCase(type)) {
-                return new RetryUntilElapsed(retryConfig.getInteger("max-elapsed", 5000), retryConfig.getInteger("sleep", 500));
+                retryPolicy = new RetryUntilElapsed(retryConfig.getInteger("max_elapsed", 5000), retryConfig.getInteger("sleep", 500));
             } else if (ExponentialBackoffRetry.class.getName().equalsIgnoreCase(type)) {
-                return new ExponentialBackoffRetry(retryConfig.getInteger("base-sleep", 500), retryConfig.getInteger("max-retries", 10));
+                retryPolicy = new ExponentialBackoffRetry(retryConfig.getInteger("base_sleep", 500), retryConfig.getInteger("max_retries", 10));
             } else if (BoundedExponentialBackoffRetry.class.getName().equalsIgnoreCase(type)) {
-                return new BoundedExponentialBackoffRetry(retryConfig.getInteger("base-sleep", 500), retryConfig.getInteger("max-sleep", 5000), retryConfig.getInteger("max-retries", 10));
+                retryPolicy = new BoundedExponentialBackoffRetry(retryConfig.getInteger("base_sleep", 500), retryConfig.getInteger("max_sleep", 5000), retryConfig.getInteger("max_retries", 10));
             }
         }
 
-        return new RetryNTimes(10, 500);
+        if (retryPolicy == null) {
+            retryPolicy = new RetryNTimes(10, 500);
+        }
+
+        this.retryPolicy = retryPolicy;
 
     }
 
-    protected AuthPolicy initAuthPolicy(JsonObject authConfig) {
+    protected void initAuthPolicy(JsonObject authConfig) {
 
         if (authConfig != null) {
             String scheme = authConfig.getString("scheme");
@@ -87,7 +102,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
                 auth = authConfig.getString("auth");
             }
 
-            return new AuthPolicy() {
+            authPolicy = new AuthPolicy() {
                 @Override
                 public String geScheme() {
                     return scheme;
@@ -100,22 +115,63 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
             };
         }
 
-        return null;
     }
 
     @SuppressWarnings("unchecked")
-    protected List<String> initPathPrefixes(JsonArray pathConfig) {
+    protected void initPathPrefixes(JsonArray pathConfig) {
 
         if (pathConfig != null) {
-            return pathConfig.toList();
+            pathPrefixes = pathConfig.toList();
         }
 
-        return null;
+    }
+
+    protected void initEnsembleProvider(JsonObject ensemble) {
+
+        if (ensemble == null) {
+            return;
+        }
+
+        String name = ensemble.getString("name");
+
+        if (Strings.isNullOrEmpty(name)) {
+            return;
+
+        } else if (ExhibitorEnsembleProvider.class.getName().equalsIgnoreCase(name)) {
+
+            JsonArray hosts = ensemble.getArray("hosts");
+            if (hosts == null) {
+                throw new IllegalArgumentException("Exhibitor ensemble provider must have hosts");
+            }
+
+            int restPort = ensemble.getInteger("rest_port", 8080);
+            String restUriPath = ensemble.getString("rest_uri_path", "/exhibitor/v1/cluster/list");
+            int pollingMs = ensemble.getInteger("polling_ms", 5000);
+            String backupConnectionString = ensemble.getString("backup_connection_string", getConnectionString());
+
+            Exhibitors exhibitors = new Exhibitors(hosts.toList(), restPort, () -> backupConnectionString);
+            ensembleProvider = new ExhibitorEnsembleProvider(exhibitors, new DefaultExhibitorRestClient(), restUriPath, pollingMs, getRetryPolicy());
+
+        } else {
+            throw new IllegalArgumentException("EnsembleProvider " + name + " is not supported");
+
+        }
+
     }
 
     @Override
     public String getConnectionString() {
         return connectionString;
+    }
+
+    /**
+     * Ensemble provider to use instead of a connection string with a {@link org.apache.curator.ensemble.fixed.FixedEnsembleProvider}
+     *
+     * @return
+     */
+    @Override
+    public EnsembleProvider getEnsembleProvider() {
+        return ensembleProvider;
     }
 
     @Override

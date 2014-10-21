@@ -3,6 +3,7 @@ package com.englishtown.vertx.zookeeper.impl;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
 import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
+import org.apache.curator.ensemble.EnsembleProvider;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorWatcher;
@@ -26,7 +27,6 @@ import static org.apache.curator.framework.CuratorFrameworkFactory.builder;
 public class DefaultZooKeeperClient implements ZooKeeperClient {
 
     private final Vertx vertx;
-    private final ZooKeeperConfigurator configurator;
     private final List<Handler<AsyncResult<Void>>> onReadyCallbacks = new ArrayList<>();
 
     private CuratorFramework framework;
@@ -37,7 +37,6 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
     @Inject
     public DefaultZooKeeperClient(Vertx vertx, ZooKeeperConfigurator configurator) {
         this.vertx = vertx;
-        this.configurator = configurator;
 
         configurator.onReady(result -> {
             if (result.failed()) {
@@ -50,13 +49,18 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
 
     private void init(ZooKeeperConfigurator configurator) {
 
-        Builder builder = builder()
-                .retryPolicy(configurator.getRetryPolicy())
-                .connectString(configurator.getConnectionString());
+        Builder builder = builder().retryPolicy(configurator.getRetryPolicy());
 
         ZooKeeperConfigurator.AuthPolicy auth = configurator.getAuthPolicy();
         if (auth != null) {
             builder.authorization(auth.geScheme(), auth.getAuth().getBytes());
+        }
+
+        EnsembleProvider ensembleProvider = configurator.getEnsembleProvider();
+        if (ensembleProvider != null) {
+            builder.ensembleProvider(ensembleProvider);
+        } else {
+            builder.connectString(configurator.getConnectionString());
         }
 
         framework = builder.build();
@@ -117,6 +121,11 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
 
     private Handler<AsyncResult<CuratorEvent>> wrapHandler(Handler<AsyncResult<CuratorEvent>> toWrap) {
         Context context = vertx.currentContext();
+
+        if (context == null) {
+            logger.warn("Current vertx context is null, are you running on the correct thread?");
+            return toWrap;
+        }
 
         return (result) -> {
             context.runOnContext(aVoid -> {

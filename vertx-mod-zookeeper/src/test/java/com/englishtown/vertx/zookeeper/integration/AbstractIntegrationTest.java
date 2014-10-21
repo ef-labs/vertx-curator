@@ -32,7 +32,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
     protected WhenZooKeeperClient whenZookeeperClient;
     protected ZooKeeperOperationBuilders operationBuilders;
     protected WhenConfiguratorHelper configuratorHelper;
-    protected List<String> teardownPaths = new ArrayList<>();
+    protected List<String> tearDownPaths = new ArrayList<>();
 
     /**
      * {@inheritDoc}
@@ -78,7 +78,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
     protected void tearDown() {
 
-        for (String path : teardownPaths) {
+        for (String path : tearDownPaths) {
             try {
                 zookeeperClient.getCuratorFramework().delete().deletingChildrenIfNeeded().forPath(path);
             } catch (Exception e) {
@@ -90,6 +90,6 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
     protected JsonObject createZooKeeperConfig() {
         return new JsonObject()
-                .putString("connection-string", "127.0.0.1:2181");
+                .putString("connection_string", "127.0.0.1:2181");
     }
 }

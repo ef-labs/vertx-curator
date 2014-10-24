@@ -13,4 +13,8 @@ public interface ConfiguratorHelper {
 
     public void getConfigElement(String path, CuratorWatcher watcher, Handler<AsyncResult<ConfigElement>> callback);
 
+    public void getConfigElementChildren(String path, Handler<AsyncResult<ConfigElement>> callback);
+
+    public void getConfigElementChildren(String path, CuratorWatcher watcher, Handler<AsyncResult<ConfigElement>> callback);
+
 }

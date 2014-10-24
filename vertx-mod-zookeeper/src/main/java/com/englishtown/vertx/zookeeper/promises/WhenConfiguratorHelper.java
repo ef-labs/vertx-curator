@@ -13,4 +13,8 @@ public interface WhenConfiguratorHelper {
 
     Promise<ConfigElement> getConfigElement(String path, CuratorWatcher watcher);
 
+    Promise<ConfigElement> getConfigElementChildren(String path);
+
+    Promise<ConfigElement> getConfigElementChildren(String path, CuratorWatcher watcher);
+
 }

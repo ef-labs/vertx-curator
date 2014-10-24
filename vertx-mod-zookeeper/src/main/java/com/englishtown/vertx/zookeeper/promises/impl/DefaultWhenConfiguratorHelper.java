@@ -45,4 +45,26 @@ public class DefaultWhenConfiguratorHelper implements WhenConfiguratorHelper {
         return d.getPromise();
 
     }
+
+    @Override
+    public Promise<ConfigElement> getConfigElementChildren(String path) {
+        return getConfigElementChildren(path, null);
+    }
+
+    @Override
+    public Promise<ConfigElement> getConfigElementChildren(String path, CuratorWatcher watcher) {
+
+        Deferred<ConfigElement> d = when.defer();
+
+        configuratorHelper.getConfigElementChildren(path, watcher, result -> {
+            if (result.succeeded()) {
+                d.resolve(result.result());
+            } else {
+                d.reject(result.cause());
+            }
+        });
+
+        return d.getPromise();
+
+    }
 }

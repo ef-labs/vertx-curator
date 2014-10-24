@@ -113,6 +113,60 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
     }
 
+    @Override
+    public void getConfigElementChildren(String elementPath, Handler<AsyncResult<ConfigElement>> callback) {
+        getConfigElement(elementPath, null, callback);
+    }
+
+    @Override
+    public void getConfigElementChildren(String elementPath, CuratorWatcher watcher, Handler<AsyncResult<ConfigElement>> callback) {
+
+        if (elementPath == null) {
+            callback.handle(new DefaultFutureResult<>(new IllegalArgumentException("null elementPath")));
+            return;
+        }
+
+        List<AsyncResult<CuratorEvent>> results = new ArrayList<>();
+        CountingCompletionHandler<Void> completionHandler = new CountingCompletionHandler<>(vertx);
+
+        for (int i = 0; i < pathPrefixes.size(); i++) {
+            completionHandler.incRequired();
+            results.add(null);
+            String path = pathPrefixes.get(i) + elementPath;
+
+            ZooKeeperOperation operation = zooKeeperOperationBuilders.getChildren()
+                    .usingWatcher(watcher)
+                    .forPath(path)
+                    .build();
+
+            int index = i;
+            zooKeeperClient.execute(operation, result -> {
+                results.set(index, result);
+                completionHandler.complete();
+            });
+        }
+
+        completionHandler.setHandler(aVoid -> {
+
+            for (AsyncResult<CuratorEvent> result : results) {
+                if (result.failed()) {
+                    callback.handle(new DefaultFutureResult<>(result.cause()));
+                    return;
+                }
+
+                CuratorEvent event = result.result();
+                if (event.getChildren() != null) {
+                    callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(event)));
+                    return;
+                }
+            }
+
+            // We didn't find a value that wasn't null, so resolve with null
+            callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(null)));
+        });
+
+    }
+
     public class CountingCompletionHandler<T> {
 
         private final Context context;

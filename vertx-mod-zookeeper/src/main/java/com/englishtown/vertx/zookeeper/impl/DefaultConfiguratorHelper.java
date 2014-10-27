@@ -115,7 +115,7 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
     @Override
     public void getConfigElementChildren(String elementPath, Handler<AsyncResult<ConfigElement>> callback) {
-        getConfigElement(elementPath, null, callback);
+        getConfigElementChildren(elementPath, null, callback);
     }
 
     @Override

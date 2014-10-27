@@ -26,7 +26,7 @@ import java.util.UUID;
  */
 public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
 
-    private String path = "/test/" + UUID.randomUUID();
+    private String path = "/" + UUID.randomUUID();
     private List<ACL> acls = new ArrayList<>();
 
     @Override

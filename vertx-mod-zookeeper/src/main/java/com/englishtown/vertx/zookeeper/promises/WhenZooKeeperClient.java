@@ -4,8 +4,6 @@ import com.englishtown.promises.Promise;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorEvent;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.Handler;
 
 /**
  */

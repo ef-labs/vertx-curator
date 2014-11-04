@@ -26,7 +26,8 @@ public class DefaultGetACLBuilder implements GetACLBuilder {
         PathUtils.validatePath(path);
 
         return (client, handler) -> {
-            client.getCuratorFramework().getACL()
+            client.getCuratorFramework()
+                    .getACL()
                     .inBackground((curatorFramework, event) -> handler.handle(new DefaultFutureResult<>(event)))
                     .forPath(path);
         };

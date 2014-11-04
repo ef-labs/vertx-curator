@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Arrays;
@@ -63,8 +64,8 @@ public class DefaultConfigElementTest {
         // and then request the Integer version of our data
         // we expect an exception to be thrown
         try {
-            result = dce.asInteger();
-            fail("No expection thrown for bad integer type");
+            dce.asInteger();
+            fail("No exception thrown for bad integer type");
         } catch (IllegalArgumentException iae) {
             // Do nothing, we're good.
         } catch (Exception e) {
@@ -109,8 +110,8 @@ public class DefaultConfigElementTest {
         // and then request the Long version of our data
         // we expect an exception to be thrown
         try {
-            result = dce.asLong();
-            fail("No expection thrown for bad long type");
+            dce.asLong();
+            fail("No exception thrown for bad long type");
         } catch (IllegalArgumentException iae) {
             // Do nothing, we're good.
         } catch (Exception e) {
@@ -157,8 +158,8 @@ public class DefaultConfigElementTest {
         // and then request the JSON version of our data
         // we expect an exception to be thrown
         try {
-            result = dce.asJsonObject();
-            fail("No expection thrown for bad json type");
+            dce.asJsonObject();
+            fail("No exception thrown for bad json type");
         } catch (IllegalArgumentException iae) {
             // Do nothing, we're good.
         } catch (Exception e) {
@@ -172,6 +173,56 @@ public class DefaultConfigElementTest {
 
         // and then request the JSON version of our data
         result = dce.asJsonObject();
+
+        // Then we expect it to be null
+        assertNull(result);
+    }
+
+    @Test
+    public void testConversionToJsonArray() throws Exception {
+        // Set up interactions
+        JsonObject jsonObject1 = new JsonObject().putString("test", "data1").putNumber("testnum", 1);
+        JsonObject jsonObject2 = new JsonObject().putString("test", "data2").putNumber("testnum", 2);
+        JsonArray jsonArray = new JsonArray().add(jsonObject1).add(jsonObject2);
+
+        when(curatorEvent.getData())
+                .thenReturn(jsonArray.encode().getBytes())
+                .thenReturn("This isn't JSON Array".getBytes())
+                .thenReturn(null);
+
+        // 1. With a valid json array
+        // When we create a new instance of DefaultConfigElement
+        DefaultConfigElement dce = new DefaultConfigElement(curatorEvent);
+
+        // and then request the JsonArray version of our data
+        JsonArray result = dce.asJsonArray();
+
+        // Then we expect the JsonArray to contain our test json.
+        assertEquals(jsonArray, result);
+
+
+        // 2. With an invalid Json string
+        // When we create a new instance of DefaultConfigElement
+        dce = new DefaultConfigElement(curatorEvent);
+
+        // and then request the JSON version of our data
+        // we expect an exception to be thrown
+        try {
+            dce.asJsonArray();
+            fail("No exception thrown for bad json type");
+        } catch (IllegalArgumentException iae) {
+            // Do nothing, we're good.
+        } catch (Exception e) {
+            fail("Unknown exception thrown when getting value asJsonObject");
+        }
+
+
+        // 3. With a null
+        // When we create a new instance of DefaultConfigElement
+        dce = new DefaultConfigElement(curatorEvent);
+
+        // and then request the JSON version of our data
+        result = dce.asJsonArray();
 
         // Then we expect it to be null
         assertNull(result);
@@ -232,8 +283,8 @@ public class DefaultConfigElementTest {
         // and then request the boolean version of our data
         // we expect an exception to be thrown
         try {
-            result = dce.asBoolean();
-            fail("No expection thrown for bad boolean type");
+            dce.asBoolean();
+            fail("No exception thrown for bad boolean type");
         } catch (IllegalArgumentException iae) {
             // Do nothing, we're good.
         } catch (Exception e) {
@@ -248,8 +299,8 @@ public class DefaultConfigElementTest {
         // and then request the boolean version of our data
         // we expect an exception to be thrown
         try {
-            result = dce.asBoolean();
-            fail("No expection thrown for bad boolean type");
+            dce.asBoolean();
+            fail("No exception thrown for bad boolean type");
         } catch (IllegalArgumentException iae) {
             // Do nothing, we're good.
         } catch (Exception e) {
@@ -268,4 +319,10 @@ public class DefaultConfigElementTest {
         assertNull(result);
     }
 
+    @Test
+    public void testCuratorEvent() throws Exception {
+        DefaultConfigElement dce = new DefaultConfigElement(curatorEvent);
+
+        assertEquals(curatorEvent, dce.getCuratorEvent());
+    }
 }

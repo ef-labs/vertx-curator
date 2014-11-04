@@ -26,11 +26,14 @@ public class GuiceZooKeeperBinder extends AbstractModule {
 
         // The builders
         bind(ZooKeeperOperationBuilders.class).to(DefaultZooKeeperOperationBuilders.class).in(Singleton.class);
-        bind(GetDataBuilder.class).to(DefaultGetDataBuilder.class);
-        bind(GetChildrenBuilder.class).to(DefaultGetChildrenBuilder.class);
         bind(CreateBuilder.class).to(DefaultCreateBuilder.class);
-        bind(DeleteBuilder.class).to(DefaultDeleteBuilder.class);
+        bind(GetDataBuilder.class).to(DefaultGetDataBuilder.class);
+        bind(SetDataBuilder.class).to(DefaultSetDataBuilder.class);
+        bind(GetChildrenBuilder.class).to(DefaultGetChildrenBuilder.class);
         bind(GetACLBuilder.class).to(DefaultGetACLBuilder.class);
+        bind(SetACLBuilder.class).to(DefaultSetACLBuilder.class);
+        bind(ExistsBuilder.class).to(DefaultExistsBuilder.class);
+        bind(DeleteBuilder.class).to(DefaultDeleteBuilder.class);
 
     }
 }

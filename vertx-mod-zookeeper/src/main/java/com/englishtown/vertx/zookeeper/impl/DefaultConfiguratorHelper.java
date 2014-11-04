@@ -120,8 +120,8 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
         private int count;
         private int required;
         private Handler<AsyncResult<T>> doneHandler;
-        private Throwable cause;
-        private boolean failed;
+        //private Throwable cause;
+        //private boolean failed;
 
         public CountingCompletionHandler(Vertx vertx) {
             this(vertx, 0);
@@ -138,17 +138,17 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
             checkDone();
         }
 
-        public synchronized void failed(Throwable t) {
-            if (!failed) {
-                // Fail immediately - but only once
-                if (doneHandler != null) {
-                    callHandler(new DefaultFutureResult<T>(t));
-                } else {
-                    cause = t;
-                }
-                failed = true;
-            }
-        }
+//        public synchronized void failed(Throwable t) {
+//            if (!failed) {
+//                // Fail immediately - but only once
+//                if (doneHandler != null) {
+//                    callHandler(new DefaultFutureResult<T>(t));
+//                } else {
+//                    cause = t;
+//                }
+//                failed = true;
+//            }
+//        }
 
         public synchronized void incRequired() {
             required++;
@@ -169,14 +169,14 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
         void checkDone() {
             if (doneHandler != null) {
-                if (cause != null) {
-                    callHandler(new DefaultFutureResult<T>(cause));
-                } else {
+                //if (cause != null) {
+                //    callHandler(new DefaultFutureResult<T>(cause));
+                //} else {
                     if (count == required) {
-                        final DefaultFutureResult<T> res = new DefaultFutureResult<T>((T) null);
+                        final DefaultFutureResult<T> res = new DefaultFutureResult<>((T) null);
                         callHandler(res);
                     }
-                }
+                //}
             }
         }
     }

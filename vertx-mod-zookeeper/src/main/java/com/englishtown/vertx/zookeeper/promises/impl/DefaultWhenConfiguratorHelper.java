@@ -9,6 +9,7 @@ import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
 import org.apache.curator.framework.api.CuratorWatcher;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * Default implementation of {@link com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper}
@@ -44,5 +45,10 @@ public class DefaultWhenConfiguratorHelper implements WhenConfiguratorHelper {
 
         return d.getPromise();
 
+    }
+
+    @Override
+    public List<String> getPrefixes() {
+        return configuratorHelper.getPrefixes();
     }
 }

@@ -5,6 +5,7 @@ import com.englishtown.promises.When;
 import com.englishtown.promises.WhenFactory;
 import com.englishtown.vertx.zookeeper.ConfigElement;
 import com.englishtown.vertx.zookeeper.ConfiguratorHelper;
+import com.englishtown.vertx.zookeeper.MatchBehavior;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,7 +52,7 @@ public class DefaultWhenConfiguratorHelperTest {
 
         target.getConfigElement(path, watcher).then(done.onFulfilled, done.onRejected);
 
-        verify(helper).getConfigElement(eq(path), eq(watcher), handlerCaptor.capture());
+        verify(helper).getConfigElement(eq(path), eq(watcher), eq(MatchBehavior.FIRST), handlerCaptor.capture());
         when(asyncResult.succeeded()).thenReturn(true);
         when(asyncResult.result()).thenReturn(configElement);
         handlerCaptor.getValue().handle(asyncResult);
@@ -68,7 +69,7 @@ public class DefaultWhenConfiguratorHelperTest {
 
         target.getConfigElement(path).then(done.onFulfilled, done.onRejected);
 
-        verify(helper).getConfigElement(eq(path), eq((CuratorWatcher) null), handlerCaptor.capture());
+        verify(helper).getConfigElement(eq(path), eq((CuratorWatcher) null), eq(MatchBehavior.FIRST), handlerCaptor.capture());
         when(asyncResult.succeeded()).thenReturn(false);
         handlerCaptor.getValue().handle(asyncResult);
 

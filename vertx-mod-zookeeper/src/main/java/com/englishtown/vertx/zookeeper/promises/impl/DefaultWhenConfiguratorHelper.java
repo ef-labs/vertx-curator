@@ -45,7 +45,7 @@ public class DefaultWhenConfiguratorHelper implements WhenConfiguratorHelper {
     public Promise<ConfigElement> getConfigElement(String path, CuratorWatcher watcher, MatchBehavior matchBehavior) {
         Deferred<ConfigElement> d = when.defer();
 
-        configuratorHelper.getConfigElement(path, watcher, result -> {
+        configuratorHelper.getConfigElement(path, watcher, matchBehavior, result -> {
             if (result.succeeded()) {
                 d.resolve(result.result());
             } else {

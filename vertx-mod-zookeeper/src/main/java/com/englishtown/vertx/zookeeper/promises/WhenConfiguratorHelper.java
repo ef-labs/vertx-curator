@@ -15,6 +15,6 @@ public interface WhenConfiguratorHelper {
 
     Promise<ConfigElement> getConfigElement(String path, CuratorWatcher watcher);
 
-    List<String> getPrefixes();
+    List<String> getPathPrefixes();
 
 }

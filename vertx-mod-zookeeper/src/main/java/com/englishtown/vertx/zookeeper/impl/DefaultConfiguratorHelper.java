@@ -182,7 +182,7 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
     }
 
     @Override
-    public List<String> getPrefixes() {
+    public List<String> getPathPrefixes() {
         return pathPrefixes;
     }
 }

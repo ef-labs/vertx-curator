@@ -13,7 +13,11 @@ public interface ConfiguratorHelper {
 
     void getConfigElement(String path, Handler<AsyncResult<ConfigElement>> callback);
 
+    void getConfigElement(String path, MatchBehavior matchBehavior, Handler<AsyncResult<ConfigElement>> callback);
+
     void getConfigElement(String path, CuratorWatcher watcher, Handler<AsyncResult<ConfigElement>> callback);
+
+    void getConfigElement(String path, CuratorWatcher watcher, MatchBehavior matchBehavior, Handler<AsyncResult<ConfigElement>> callback);
 
     List<String> getPathPrefixes();
 

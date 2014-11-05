@@ -4,6 +4,7 @@ import com.englishtown.vertx.zookeeper.*;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.AsyncResult;
@@ -15,6 +16,9 @@ import org.vertx.java.core.impl.DefaultFutureResult;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.englishtown.vertx.zookeeper.MatchBehavior.FIRST;
+import static org.apache.zookeeper.KeeperException.Code.OK;
 
 /**
  */
@@ -57,12 +61,21 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
     @Override
     public void getConfigElement(String elementPath, Handler<AsyncResult<ConfigElement>> callback) {
-        getConfigElement(elementPath, null, callback);
+        getConfigElement(elementPath, FIRST, callback);
+    }
+
+    @Override
+    public void getConfigElement(String elementPath, MatchBehavior matchBehavior, Handler<AsyncResult<ConfigElement>> callback) {
+        getConfigElement(elementPath, null, matchBehavior, callback);
     }
 
     @Override
     public void getConfigElement(String elementPath, CuratorWatcher watcher, Handler<AsyncResult<ConfigElement>> callback) {
+        getConfigElement(elementPath, watcher, FIRST, callback);
+    }
 
+    @Override
+    public void getConfigElement(String elementPath, CuratorWatcher watcher, MatchBehavior matchBehavior, Handler<AsyncResult<ConfigElement>> callback) {
         if (elementPath == null) {
             callback.handle(new DefaultFutureResult<>(new IllegalArgumentException("null elementPath")));
             return;
@@ -101,16 +114,40 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
                 }
 
                 CuratorEvent event = result.result();
-                if (event.getData() != null) {
-                    callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(event)));
-                    return;
-                }
-            }
 
-            // We didn't find a value that wasn't null, so resolve with null
+                switch(KeeperException.Code.get(event.getResultCode())) {
+                    case OK:
+                        if (nodeMatches(event, matchBehavior)) {
+                            callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(event)));
+                            return;
+                        }
+
+                        break;
+
+                    case NOAUTH:
+                        logger.warn("Not authorized to view node {}", event.getPath());
+                    case NONODE:
+                        break;
+
+                    default:
+                        logger.error("Error while reading node {}. Error was {}", event.getPath(), KeeperException.Code.get(event.getResultCode()).name());
+                        callback.handle(new DefaultFutureResult<>(new Exception("Error while reading node. {})" + KeeperException.Code.get(event.getResultCode()).name())));
+               }
+          }
+
+            // We didn't find a matching node, so we just resolve with null to show we didn't find one
             callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(null)));
         });
+    }
 
+    private boolean nodeMatches(CuratorEvent event, MatchBehavior matchBehavior) {
+        switch (matchBehavior) {
+            case FIRST_NOTNULL:
+                return event.getData() != null;
+
+            default:
+                return true;
+        }
     }
 
     public class CountingCompletionHandler<T> {

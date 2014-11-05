@@ -5,6 +5,7 @@ import com.englishtown.promises.Promise;
 import com.englishtown.promises.When;
 import com.englishtown.vertx.zookeeper.ConfigElement;
 import com.englishtown.vertx.zookeeper.ConfiguratorHelper;
+import com.englishtown.vertx.zookeeper.MatchBehavior;
 import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
 import org.apache.curator.framework.api.CuratorWatcher;
 
@@ -27,12 +28,21 @@ public class DefaultWhenConfiguratorHelper implements WhenConfiguratorHelper {
 
     @Override
     public Promise<ConfigElement> getConfigElement(String path) {
-        return getConfigElement(path, null);
+        return getConfigElement(path, MatchBehavior.FIRST);
+    }
+
+    @Override
+    public Promise<ConfigElement> getConfigElement(String path, MatchBehavior matchBehavior) {
+        return getConfigElement(path, null, matchBehavior);
     }
 
     @Override
     public Promise<ConfigElement> getConfigElement(String path, CuratorWatcher watcher) {
+        return getConfigElement(path, watcher, MatchBehavior.FIRST);
+    }
 
+    @Override
+    public Promise<ConfigElement> getConfigElement(String path, CuratorWatcher watcher, MatchBehavior matchBehavior) {
         Deferred<ConfigElement> d = when.defer();
 
         configuratorHelper.getConfigElement(path, watcher, result -> {
@@ -44,7 +54,6 @@ public class DefaultWhenConfiguratorHelper implements WhenConfiguratorHelper {
         });
 
         return d.getPromise();
-
     }
 
     @Override

@@ -68,7 +68,7 @@ public class DefaultWhenConfiguratorHelperTest {
 
         target.getConfigElement(path).then(done.onFulfilled, done.onRejected);
 
-        verify(helper).getConfigElement(eq(path), eq(null), handlerCaptor.capture());
+        verify(helper).getConfigElement(eq(path), eq((CuratorWatcher) null), handlerCaptor.capture());
         when(asyncResult.succeeded()).thenReturn(false);
         handlerCaptor.getValue().handle(asyncResult);
 

@@ -16,6 +16,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,7 +24,6 @@ import java.util.List;
  */
 public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
 
-    private JsonObject config;
     protected String connectionString;
     protected RetryPolicy retryPolicy;
     protected AuthPolicy authPolicy;
@@ -36,7 +36,6 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     }
 
     public JsonConfigZooKeeperConfigurator(JsonObject config) {
-        this.config = config;
         init(config);
     }
 
@@ -68,8 +67,6 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
 
             if (RetryNTimes.class.getName().equalsIgnoreCase(type)) {
                 retryPolicy = new RetryNTimes(retryConfig.getInteger("n", 10), retryConfig.getInteger("sleep", 500));
-            } else if (RetryOneTime.class.getName().equalsIgnoreCase(type)) {
-                retryPolicy = new RetryOneTime(retryConfig.getInteger("sleep", 500));
             } else if (RetryOneTime.class.getName().equalsIgnoreCase(type)) {
                 retryPolicy = new RetryOneTime(retryConfig.getInteger("sleep", 500));
             } else if (RetryUntilElapsed.class.getName().equalsIgnoreCase(type)) {
@@ -117,13 +114,24 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
 
     }
 
-    @SuppressWarnings("unchecked")
-    protected void initPathPrefixes(JsonArray pathConfig) {
+    private List<String> convertToList(JsonArray jsonArray, String errorPrefix) {
+        List<String> list = new ArrayList<>();
 
-        if (pathConfig != null) {
-            pathPrefixes = pathConfig.toList();
+        if (jsonArray != null){
+            for (Object obj : jsonArray) {
+                if (obj instanceof String) {
+                    list.add((String) obj);
+                } else {
+                    throw new IllegalArgumentException(errorPrefix + obj);
+                }
+            }
         }
 
+        return list;
+    }
+
+    protected void initPathPrefixes(JsonArray pathConfig) {
+        pathPrefixes = convertToList(pathConfig, "Path prefixes must be of type string: ");
     }
 
     protected void initEnsembleProvider(JsonObject ensemble) {
@@ -136,11 +144,12 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
 
         if (Strings.isNullOrEmpty(name)) {
             return;
+        }
 
-        } else if (ExhibitorEnsembleProvider.class.getName().equalsIgnoreCase(name)) {
+        if (ExhibitorEnsembleProvider.class.getName().equalsIgnoreCase(name)) {
 
-            JsonArray hosts = ensemble.getArray("hosts");
-            if (hosts == null) {
+            List<String> hosts = convertToList(ensemble.getArray("hosts"), "Hosts must be of type string: ");
+            if (hosts == null || hosts.size() == 0) {
                 throw new IllegalArgumentException("Exhibitor ensemble provider must have hosts");
             }
 
@@ -149,7 +158,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
             int pollingMs = ensemble.getInteger("polling_ms", 5000);
             String backupConnectionString = ensemble.getString("backup_connection_string", getConnectionString());
 
-            Exhibitors exhibitors = new Exhibitors(hosts.toList(), restPort, () -> backupConnectionString);
+            Exhibitors exhibitors = new Exhibitors(hosts, restPort, () -> backupConnectionString);
             ensembleProvider = new ExhibitorEnsembleProvider(exhibitors, new DefaultExhibitorRestClient(), restUriPath, pollingMs, getRetryPolicy());
 
         } else {
@@ -167,7 +176,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     /**
      * Ensemble provider to use instead of a connection string with a {@link org.apache.curator.ensemble.fixed.FixedEnsembleProvider}
      *
-     * @return
+     * @return the {@link EnsembleProvider}
      */
     @Override
     public EnsembleProvider getEnsembleProvider() {
@@ -187,7 +196,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     /**
      * Optional path prefixes used when getting data with the {@link com.englishtown.vertx.zookeeper.ConfiguratorHelper}
      *
-     * @return
+     * @return the list of path prefixes
      */
     @Override
     public List<String> getPathPrefixes() {

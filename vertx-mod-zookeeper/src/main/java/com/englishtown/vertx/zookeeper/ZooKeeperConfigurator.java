@@ -22,7 +22,7 @@ public interface ZooKeeperConfigurator {
     /**
      * Ensemble provider to use instead of a connection string with a {@link org.apache.curator.ensemble.fixed.FixedEnsembleProvider}
      *
-     * @return
+     * @return the {@link EnsembleProvider}
      */
     EnsembleProvider getEnsembleProvider();
 
@@ -43,14 +43,14 @@ public interface ZooKeeperConfigurator {
     /**
      * Optional path prefixes used when getting data with the {@link com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper}
      *
-     * @return
+     * @return the list of path prefixes
      */
     List<String> getPathPrefixes();
 
     /**
      * Callback for when the configurator is ready
      *
-     * @param callback
+     * @param callback the callback
      */
     void onReady(Handler<AsyncResult<Void>> callback);
 

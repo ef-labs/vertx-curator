@@ -10,7 +10,7 @@ import org.vertx.java.core.impl.DefaultFutureResult;
 import java.util.List;
 
 /**
- * Created by adriangonzalez on 10/13/14.
+ * Default implementation of {@link com.englishtown.vertx.zookeeper.builders.CreateBuilder}
  */
 public class DefaultCreateBuilder implements CreateBuilder {
 

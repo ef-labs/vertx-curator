@@ -1,4 +1,4 @@
-package com.englishtown.vertx.zookeeper.integration;
+package com.englishtown.vertx.zookeeper.integration.hk2;
 
 import com.englishtown.promises.Promise;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;

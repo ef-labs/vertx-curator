@@ -1,4 +1,4 @@
-package com.englishtown.vertx.zookeeper.integration;
+package com.englishtown.vertx.zookeeper.integration.hk2;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;

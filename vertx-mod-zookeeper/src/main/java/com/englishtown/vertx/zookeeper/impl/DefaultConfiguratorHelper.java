@@ -4,6 +4,7 @@ import com.englishtown.vertx.zookeeper.*;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.englishtown.vertx.zookeeper.MatchBehavior.FIRST;
-import static org.apache.zookeeper.KeeperException.Code.OK;
 
 /**
  */
@@ -91,7 +91,7 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
         for (int i = 0; i < pathPrefixes.size(); i++) {
             completionHandler.incRequired();
             results.add(null);
-            String path = pathPrefixes.get(i) + elementPath;
+            String path = ZKPaths.makePath(pathPrefixes.get(i), elementPath);
 
             ZooKeeperOperation operation = zooKeeperOperationBuilders.getData()
                     .usingWatcher(watcher)
@@ -115,7 +115,7 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
                 CuratorEvent event = result.result();
 
-                switch(KeeperException.Code.get(event.getResultCode())) {
+                switch (KeeperException.Code.get(event.getResultCode())) {
                     case OK:
                         if (nodeMatches(event, matchBehavior)) {
                             callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(event)));
@@ -132,8 +132,8 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
                     default:
                         logger.error("Error while reading node {}. Error was {}", event.getPath(), KeeperException.Code.get(event.getResultCode()).name());
                         callback.handle(new DefaultFutureResult<>(new Exception("Error while reading node. {})" + KeeperException.Code.get(event.getResultCode()).name())));
-               }
-          }
+                }
+            }
 
             // We didn't find a matching node, so we just resolve with null to show we didn't find one
             callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(null)));
@@ -209,10 +209,10 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
                 //if (cause != null) {
                 //    callHandler(new DefaultFutureResult<T>(cause));
                 //} else {
-                    if (count == required) {
-                        final DefaultFutureResult<T> res = new DefaultFutureResult<>((T) null);
-                        callHandler(res);
-                    }
+                if (count == required) {
+                    final DefaultFutureResult<T> res = new DefaultFutureResult<>((T) null);
+                    callHandler(res);
+                }
                 //}
             }
         }

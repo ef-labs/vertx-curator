@@ -1,5 +1,6 @@
 package com.englishtown.vertx.zookeeper.integration.hk2;
 
+import com.englishtown.promises.Promise;
 import com.englishtown.promises.When;
 import com.englishtown.vertx.promises.hk2.HK2WhenBinder;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
@@ -91,5 +92,16 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
     protected JsonObject createZooKeeperConfig() {
         return new JsonObject()
                 .putString("connection_string", "127.0.0.1:2181");
+    }
+
+    protected <T> Promise<T> onRejected(Throwable t) {
+        try {
+            VertxAssert.handleThrowable(t);
+        } catch (Throwable t2) {
+            t.printStackTrace();
+            t2.printStackTrace();
+        }
+        VertxAssert.fail();
+        return null;
     }
 }

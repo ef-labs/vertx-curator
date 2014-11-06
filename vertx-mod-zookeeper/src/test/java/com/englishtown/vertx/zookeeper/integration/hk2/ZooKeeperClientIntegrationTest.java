@@ -104,11 +104,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
 
                     return whenZookeeperClient.execute(delete);
                 })
-                .otherwise(t -> {
-                    VertxAssert.handleThrowable(t);
-                    VertxAssert.fail();
-                    return null;
-                });
+                .otherwise(this::onRejected);
 
     }
 
@@ -264,11 +260,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
                     VertxAssert.testComplete();
                     return null;
                 })
-                .otherwise(t -> {
-                    VertxAssert.handleThrowable(t);
-                    VertxAssert.fail();
-                    return null;
-                });
+                .otherwise(this::onRejected);
     }
 
 }

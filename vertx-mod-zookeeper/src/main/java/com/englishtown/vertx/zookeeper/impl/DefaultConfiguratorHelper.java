@@ -2,6 +2,7 @@ package com.englishtown.vertx.zookeeper.impl;
 
 import com.englishtown.vertx.zookeeper.*;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
+import com.google.common.base.Strings;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.utils.ZKPaths;
@@ -91,7 +92,8 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
         for (int i = 0; i < pathPrefixes.size(); i++) {
             completionHandler.incRequired();
             results.add(null);
-            String path = ZKPaths.makePath(pathPrefixes.get(i), elementPath);
+            String prefix = pathPrefixes.get(i);
+            String path = (Strings.isNullOrEmpty(prefix)) ? elementPath : ZKPaths.makePath(prefix, elementPath);
 
             ZooKeeperOperation operation = zooKeeperOperationBuilders.getData()
                     .usingWatcher(watcher)

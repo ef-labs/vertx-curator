@@ -20,4 +20,6 @@ public interface ZooKeeperClient {
 
     CuratorWatcher wrapWatcher(CuratorWatcher watcher);
 
+    void close();
+
 }

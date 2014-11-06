@@ -16,4 +16,6 @@ public interface WhenZooKeeperClient {
     boolean initialized();
 
     Promise<Void> onReady();
+
+    void close();
 }

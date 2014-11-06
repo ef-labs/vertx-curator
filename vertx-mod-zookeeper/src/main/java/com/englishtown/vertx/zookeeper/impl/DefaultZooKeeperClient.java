@@ -133,4 +133,9 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
             });
         };
     }
+
+    @Override
+    public void close() {
+        getCuratorFramework().close();
+    }
 }

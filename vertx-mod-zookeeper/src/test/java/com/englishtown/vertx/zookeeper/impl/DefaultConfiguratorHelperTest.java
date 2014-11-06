@@ -6,6 +6,7 @@ import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorWatcher;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -17,10 +18,11 @@ import org.vertx.java.core.Context;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.anyObject;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,144 +31,119 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultConfiguratorHelperTest {
 
-    String elementPath = "test/path";
+    private DefaultConfiguratorHelper configuratorHelper;
+    private String elementPath = "test/path";
 
     @Mock
     CuratorWatcher watcher;
-
     @Mock
     ZooKeeperConfigurator configurator;
-
     @Mock
     ZooKeeperClient zooKeeperClient;
-
     @Mock
     ZooKeeperOperationBuilders zooKeeperOperationBuilders;
-
     @Mock
     Vertx vertx;
-
     @Mock
-    Context context1;
-
-    @Mock
-    Context context2;
-
+    Context context;
     @Mock
     AsyncResult<Void> asyncResultOnReady;
-
-    @Captor
-    ArgumentCaptor<Handler<AsyncResult<Void>>> handlerCaptorOnReady;
-
-    @Mock
-    AsyncResult<CuratorEvent> asyncResultCuratorEvent;
-
-    @Captor
-    ArgumentCaptor<Handler<AsyncResult<CuratorEvent>>> handlerCuratorEvent;
-
     @Mock
     CuratorEvent event;
-
     @Mock
     com.englishtown.vertx.zookeeper.builders.GetDataBuilder getDataBuilder;
-
     @Mock
     ZooKeeperOperation operation;
-
     @Mock
     Throwable throwable;
+    @Mock
+    AsyncResult<CuratorEvent> curatorEventAsyncResult;
+
+    @Captor
+    ArgumentCaptor<Handler<AsyncResult<Void>>> onReadyCaptor;
+    @Captor
+    ArgumentCaptor<Handler<AsyncResult<CuratorEvent>>> curatorEventHandlerCaptor;
 
     byte[] data = new byte[1];
 
-    private DefaultConfiguratorHelper getTarget() {
-        DefaultConfiguratorHelper target = new DefaultConfiguratorHelper(
-                configurator, zooKeeperClient, zooKeeperOperationBuilders, vertx);
+    @Before
+    public void setUp() throws Exception {
 
-        verify(configurator).onReady(handlerCaptorOnReady.capture());
-        handlerCaptorOnReady.getValue().handle(asyncResultOnReady);
+        when(vertx.currentContext()).thenReturn(context);
+        when(zooKeeperOperationBuilders.getData()).thenReturn(getDataBuilder);
+        when(getDataBuilder.usingWatcher(any())).thenReturn(getDataBuilder);
+        when(getDataBuilder.forPath(any())).thenReturn(getDataBuilder);
+        when(getDataBuilder.build()).thenReturn(operation);
+        when(curatorEventAsyncResult.result()).thenReturn(event);
+        when(event.getData()).thenReturn(data);
 
-        return target;
+        configuratorHelper = new DefaultConfiguratorHelper(configurator, zooKeeperClient, zooKeeperOperationBuilders, vertx);
+
+        verify(configurator).onReady(onReadyCaptor.capture());
+        onReadyCaptor.getValue().handle(asyncResultOnReady);
+
     }
 
     @Test
     public void testGetConfigElement_NullPath() throws Exception {
-        getTarget().getConfigElement(null, event -> {
-            assertEquals(IllegalArgumentException.class, event.cause().getClass());
+        configuratorHelper.getConfigElement(null, result -> {
+            assertThat(result.cause(), instanceOf(IllegalArgumentException.class));
         });
     }
 
     @Test
     public void testGetConfigElement_RunOnExternalContext() throws Exception {
-        when(vertx.currentContext()).thenReturn(context1).thenReturn(context2);
-        when(zooKeeperOperationBuilders.getData()).thenReturn(getDataBuilder);
-        when(getDataBuilder.usingWatcher(watcher)).thenReturn(getDataBuilder);
-        when(getDataBuilder.forPath(elementPath)).thenReturn(getDataBuilder);
-        when(getDataBuilder.build()).thenReturn(operation);
 
-        DefaultConfiguratorHelper target = getTarget();
-        target.getConfigElement(elementPath, watcher, event -> {
-            assertNull(event.result().asBytes());
+        when(vertx.currentContext()).thenReturn(context).thenReturn(mock(Context.class));
+
+        configuratorHelper.getConfigElement(elementPath, watcher, result -> {
+            // Should not be called
+            fail();
         });
 
-        verify(zooKeeperClient).execute(eq(operation), handlerCuratorEvent.capture());
-        when(asyncResultCuratorEvent.result()).thenReturn(event);
-        handlerCuratorEvent.getValue().handle(asyncResultCuratorEvent);
+        verify(zooKeeperClient).execute(eq(operation), curatorEventHandlerCaptor.capture());
+        curatorEventHandlerCaptor.getValue().handle(curatorEventAsyncResult);
 
-        verify(context1).runOnContext(anyObject());
+        verify(context).runOnContext(any());
     }
 
     @Test
-    public void testGetConfigElement_EmptyPathPrefixes() throws Exception {
-        when(zooKeeperOperationBuilders.getData()).thenReturn(getDataBuilder);
-        when(getDataBuilder.usingWatcher(watcher)).thenReturn(getDataBuilder);
-        when(getDataBuilder.forPath(elementPath)).thenReturn(getDataBuilder);
-        when(getDataBuilder.build()).thenReturn(operation);
+    public void testGetConfigElement_NullPathPrefixes() throws Exception {
 
         when(configurator.getPathPrefixes()).thenReturn(null);
 
-        DefaultConfiguratorHelper target = getTarget();
-        target.getConfigElement(elementPath, watcher, event -> {
-            assertEquals(data, event.result().asBytes());
+        configuratorHelper.getConfigElement(elementPath, watcher, result -> {
+            assertEquals(data, result.result().asBytes());
         });
 
-        verify(zooKeeperClient).execute(eq(operation), handlerCuratorEvent.capture());
-        when(asyncResultCuratorEvent.result()).thenReturn(event);
-        when(event.getData()).thenReturn(data);
-        handlerCuratorEvent.getValue().handle(asyncResultCuratorEvent);
+        verify(zooKeeperClient).execute(eq(operation), curatorEventHandlerCaptor.capture());
+        curatorEventHandlerCaptor.getValue().handle(curatorEventAsyncResult);
     }
 
     @Test
-    public void testGetConfigElement_EmptyResults() throws Exception {
-        when(zooKeeperOperationBuilders.getData()).thenReturn(getDataBuilder);
-        when(getDataBuilder.usingWatcher(watcher)).thenReturn(getDataBuilder);
-        when(getDataBuilder.forPath(elementPath)).thenReturn(getDataBuilder);
-        when(getDataBuilder.build()).thenReturn(operation);
+    public void testGetConfigElement_NullResults() throws Exception {
 
-        DefaultConfiguratorHelper target = getTarget();
-        target.getConfigElement(elementPath, watcher, event -> {
-            assertNull(event.result().asBytes());
+        when(event.getData()).thenReturn(null);
+
+        configuratorHelper.getConfigElement(elementPath, watcher, result -> {
+            assertFalse(result.result().hasValue());
         });
 
-        verify(zooKeeperClient).execute(eq(operation), handlerCuratorEvent.capture());
-        when(asyncResultCuratorEvent.result()).thenReturn(event);
-        handlerCuratorEvent.getValue().handle(asyncResultCuratorEvent);
+        verify(zooKeeperClient).execute(eq(operation), curatorEventHandlerCaptor.capture());
+        curatorEventHandlerCaptor.getValue().handle(curatorEventAsyncResult);
     }
 
     @Test
     public void testGetConfigElement_FailedResult() throws Exception {
-        when(zooKeeperOperationBuilders.getData()).thenReturn(getDataBuilder);
-        when(getDataBuilder.usingWatcher(watcher)).thenReturn(getDataBuilder);
-        when(getDataBuilder.forPath(elementPath)).thenReturn(getDataBuilder);
-        when(getDataBuilder.build()).thenReturn(operation);
 
-        DefaultConfiguratorHelper target = getTarget();
-        target.getConfigElement(elementPath, watcher, event -> {
-            assertEquals(throwable, event.cause());
+        when(curatorEventAsyncResult.failed()).thenReturn(true);
+        when(curatorEventAsyncResult.cause()).thenReturn(throwable);
+
+        configuratorHelper.getConfigElement(elementPath, watcher, result -> {
+            assertEquals(throwable, result.cause());
         });
 
-        verify(zooKeeperClient).execute(eq(operation), handlerCuratorEvent.capture());
-        when(asyncResultCuratorEvent.failed()).thenReturn(true);
-        when(asyncResultCuratorEvent.cause()).thenReturn(throwable);
-        handlerCuratorEvent.getValue().handle(asyncResultCuratorEvent);
+        verify(zooKeeperClient).execute(eq(operation), curatorEventHandlerCaptor.capture());
+        curatorEventHandlerCaptor.getValue().handle(curatorEventAsyncResult);
     }
 }

@@ -67,6 +67,6 @@ public class DefaultWhenZooKeeperClient implements WhenZooKeeperClient {
 
     @Override
     public void close() {
-        getCuratorFramework().close();
+        client.close();
     }
 }

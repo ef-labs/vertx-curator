@@ -96,7 +96,6 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
             String path = (Strings.isNullOrEmpty(prefix)) ? elementPath : ZKPaths.makePath(prefix, elementPath);
 
             ZooKeeperOperation operation = zooKeeperOperationBuilders.getData()
-                    .usingWatcher(watcher)
                     .forPath(path)
                     .build();
 
@@ -120,7 +119,16 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
                 switch (KeeperException.Code.get(event.getResultCode())) {
                     case OK:
                         if (nodeMatches(event, matchBehavior)) {
-                            callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(event)));
+                            // We have to get the data again, only with a watcher this time, just to set the watcher on our
+                            // chosen znode.
+                            ZooKeeperOperation operation = zooKeeperOperationBuilders.getData()
+                                    .forPath(event.getPath())
+                                    .usingWatcher(watcher)
+                                    .build();
+                            zooKeeperClient.execute(operation, result2 -> {
+                                callback.handle(new DefaultFutureResult<>(new DefaultConfigElement(result2.result())));
+                            });
+
                             return;
                         }
 

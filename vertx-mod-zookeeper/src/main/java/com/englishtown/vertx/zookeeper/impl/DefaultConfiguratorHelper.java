@@ -7,13 +7,13 @@ import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Context;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.impl.DefaultFutureResult;
+import org.vertx.java.core.logging.Logger;
+import org.vertx.java.core.logging.impl.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -135,13 +135,13 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
                         break;
 
                     case NOAUTH:
-                        logger.warn("Not authorized to view node {}", event.getPath());
+                        logger.warn("Not authorized to view node " + event.getPath());
                     case NONODE:
                         break;
 
                     default:
-                        logger.error("Error while reading node {}. Error was {}", event.getPath(), KeeperException.Code.get(event.getResultCode()).name());
-                        callback.handle(new DefaultFutureResult<>(new Exception("Error while reading node. {})" + KeeperException.Code.get(event.getResultCode()).name())));
+                        logger.error("Error while reading node" + event.getPath() + ". Error was " + KeeperException.Code.get(event.getResultCode()).name());
+                        callback.handle(new DefaultFutureResult<>(new Exception("Error while reading node: " + KeeperException.Code.get(event.getResultCode()).name())));
                 }
             }
 

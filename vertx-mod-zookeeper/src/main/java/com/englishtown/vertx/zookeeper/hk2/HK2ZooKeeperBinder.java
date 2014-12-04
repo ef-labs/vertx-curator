@@ -34,6 +34,7 @@ public class HK2ZooKeeperBinder extends AbstractBinder {
         bind(DefaultSetACLBuilder.class).to(SetACLBuilder.class);
         bind(DefaultExistsBuilder.class).to(ExistsBuilder.class);
         bind(DefaultDeleteBuilder.class).to(DeleteBuilder.class);
+        bind(DefaultGetConfigBuilder.class).to(GetConfigBuilder.class);
 
     }
 }

@@ -39,6 +39,9 @@ public class DefaultZooKeeperOperationBuildersTest {
     @Mock
     Provider<DeleteBuilder> deleteBuilderProvider;
 
+    @Mock
+    Provider<GetConfigBuilder> getConfigBuilderProvider;
+
     @Test
     public void testDefaultZooKeeperOperationBuilders() throws Exception {
         DefaultZooKeeperOperationBuilders target = new DefaultZooKeeperOperationBuilders(
@@ -50,6 +53,7 @@ public class DefaultZooKeeperOperationBuildersTest {
                 , getChildrenBuilderProvider
                 , existsBuilderProvider
                 , deleteBuilderProvider
+                , getConfigBuilderProvider
         );
 
         target.checkExists();

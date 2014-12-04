@@ -21,4 +21,6 @@ public interface ZooKeeperOperationBuilders {
 
     DeleteBuilder delete();
 
+    GetConfigBuilder getConfig();
+
 }

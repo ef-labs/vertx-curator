@@ -17,6 +17,7 @@ public class DefaultZooKeeperOperationBuilders implements ZooKeeperOperationBuil
     private final Provider<GetChildrenBuilder> getChildrenBuilderProvider;
     private final Provider<ExistsBuilder> existsBuilderProvider;
     private final Provider<DeleteBuilder> deleteBuilderProvider;
+    private final Provider<GetConfigBuilder> getConfigBuilderProvider;
 
     @Inject
     public DefaultZooKeeperOperationBuilders(
@@ -26,7 +27,9 @@ public class DefaultZooKeeperOperationBuilders implements ZooKeeperOperationBuil
             Provider<GetACLBuilder> getACLBuilderProvider,
             Provider<SetACLBuilder> setACLBuilderProvider,
             Provider<GetChildrenBuilder> getChildrenBuilderProvider,
-            Provider<ExistsBuilder> existsBuilderProvider, Provider<DeleteBuilder> deleteBuilderProvider) {
+            Provider<ExistsBuilder> existsBuilderProvider,
+            Provider<DeleteBuilder> deleteBuilderProvider,
+            Provider<GetConfigBuilder> getConfigBuilderProvider) {
         this.createBuilderProvider = createBuilderProvider;
         this.getDataBuilderProvider = getDataBuilderProvider;
         this.setDataBuilderProvider = setDataBuilderProvider;
@@ -35,6 +38,7 @@ public class DefaultZooKeeperOperationBuilders implements ZooKeeperOperationBuil
         this.getChildrenBuilderProvider = getChildrenBuilderProvider;
         this.existsBuilderProvider = existsBuilderProvider;
         this.deleteBuilderProvider = deleteBuilderProvider;
+        this.getConfigBuilderProvider = getConfigBuilderProvider;
     }
 
     @Override
@@ -77,4 +81,8 @@ public class DefaultZooKeeperOperationBuilders implements ZooKeeperOperationBuil
         return deleteBuilderProvider.get();
     }
 
+    @Override
+    public GetConfigBuilder getConfig() {
+        return getConfigBuilderProvider.get();
+    }
 }

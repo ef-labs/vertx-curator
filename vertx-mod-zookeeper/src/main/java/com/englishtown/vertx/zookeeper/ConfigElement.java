@@ -77,6 +77,13 @@ public interface ConfigElement {
     byte[] asBytes();
 
     /**
+     * Returns true if this element has a value, otherwise false.
+     *
+     * @return boolean
+     */
+    boolean hasValue();
+
+    /**
      * Returns the {@link org.apache.curator.framework.api.CuratorEvent} object that provides the raw result of
      * the config element request.
      *

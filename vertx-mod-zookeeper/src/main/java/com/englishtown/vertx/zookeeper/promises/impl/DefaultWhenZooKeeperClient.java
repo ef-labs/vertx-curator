@@ -64,4 +64,9 @@ public class DefaultWhenZooKeeperClient implements WhenZooKeeperClient {
 
         return d.getPromise();
     }
+
+    @Override
+    public void close() {
+        client.close();
+    }
 }

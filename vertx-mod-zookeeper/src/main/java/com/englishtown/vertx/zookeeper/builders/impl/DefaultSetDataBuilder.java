@@ -2,6 +2,7 @@ package com.englishtown.vertx.zookeeper.builders.impl;
 
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import com.englishtown.vertx.zookeeper.builders.SetDataBuilder;
+import org.apache.zookeeper.common.PathUtils;
 import org.vertx.java.core.impl.DefaultFutureResult;
 
 /**
@@ -37,6 +38,8 @@ public class DefaultSetDataBuilder implements SetDataBuilder {
         byte[] data = this.data;
         String path = this.path;
         Integer version = this.version;
+
+        PathUtils.validatePath(path);
 
         return (client, handler) -> {
             org.apache.curator.framework.api.SetDataBuilder builder = client.getCuratorFramework().setData();

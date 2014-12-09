@@ -2,6 +2,7 @@ package com.englishtown.vertx.zookeeper.builders.impl;
 
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import com.englishtown.vertx.zookeeper.builders.GetACLBuilder;
+import org.apache.zookeeper.common.PathUtils;
 import org.vertx.java.core.impl.DefaultFutureResult;
 
 /**
@@ -22,8 +23,11 @@ public class DefaultGetACLBuilder implements GetACLBuilder {
 
         String path = this.path;
 
+        PathUtils.validatePath(path);
+
         return (client, handler) -> {
-            client.getCuratorFramework().getACL()
+            client.getCuratorFramework()
+                    .getACL()
                     .inBackground((curatorFramework, event) -> handler.handle(new DefaultFutureResult<>(event)))
                     .forPath(path);
         };

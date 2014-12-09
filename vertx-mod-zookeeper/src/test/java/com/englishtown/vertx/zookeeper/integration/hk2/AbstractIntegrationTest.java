@@ -1,10 +1,12 @@
-package com.englishtown.vertx.zookeeper.integration;
+package com.englishtown.vertx.zookeeper.integration.hk2;
 
+import com.englishtown.promises.Promise;
 import com.englishtown.promises.When;
 import com.englishtown.vertx.promises.hk2.HK2WhenBinder;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import com.englishtown.vertx.zookeeper.hk2.HK2WhenZooKeeperBinder;
+import com.englishtown.vertx.zookeeper.impl.JsonConfigZooKeeperConfigurator;
 import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
 import com.englishtown.vertx.zookeeper.promises.WhenZooKeeperClient;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -32,7 +34,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
     protected WhenZooKeeperClient whenZookeeperClient;
     protected ZooKeeperOperationBuilders operationBuilders;
     protected WhenConfiguratorHelper configuratorHelper;
-    protected List<String> teardownPaths = new ArrayList<>();
+    protected List<String> tearDownPaths = new ArrayList<>();
 
     /**
      * {@inheritDoc}
@@ -78,7 +80,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
     protected void tearDown() {
 
-        for (String path : teardownPaths) {
+        for (String path : tearDownPaths) {
             try {
                 zookeeperClient.getCuratorFramework().delete().deletingChildrenIfNeeded().forPath(path);
             } catch (Exception e) {
@@ -90,6 +92,17 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
     protected JsonObject createZooKeeperConfig() {
         return new JsonObject()
-                .putString("connection-string", "127.0.0.1:2181");
+                .putString(JsonConfigZooKeeperConfigurator.FIELD_CONNECTION_STRING, "127.0.0.1:2181");
+    }
+
+    protected <T> Promise<T> onRejected(Throwable t) {
+        try {
+            VertxAssert.handleThrowable(t);
+        } catch (Throwable t2) {
+            t.printStackTrace();
+            t2.printStackTrace();
+        }
+        VertxAssert.fail();
+        return null;
     }
 }

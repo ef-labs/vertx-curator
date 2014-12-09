@@ -1,6 +1,7 @@
 package com.englishtown.vertx.zookeeper;
 
 import org.apache.curator.RetryPolicy;
+import org.apache.curator.ensemble.EnsembleProvider;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 
@@ -12,11 +13,18 @@ import java.util.List;
 public interface ZooKeeperConfigurator {
 
     /**
-     * Standard zookeeper connection string
+     * Standard zookeeper connection string.  This is used if an {@link org.apache.curator.ensemble.EnsembleProvider} is not specified.
      *
      * @return connection string
      */
     String getConnectionString();
+
+    /**
+     * Ensemble provider to use instead of a connection string with a {@link org.apache.curator.ensemble.fixed.FixedEnsembleProvider}
+     *
+     * @return the {@link EnsembleProvider}
+     */
+    EnsembleProvider getEnsembleProvider();
 
     /**
      * The curator retry policy to use
@@ -33,15 +41,16 @@ public interface ZooKeeperConfigurator {
     AuthPolicy getAuthPolicy();
 
     /**
-     * Optional path prefixes used when getting data with the {@link com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper}
+     * Optional path suffixes used when getting data with the {@link com.englishtown.vertx.zookeeper.ConfiguratorHelper}
      *
-     * @return
+     * @return the list of path suffixes
      */
-    List<String> getPathPrefixes();
+    List<String> getPathSuffixes();
 
     /**
      * Callback for when the configurator is ready
-     * @param callback
+     *
+     * @param callback the callback
      */
     void onReady(Handler<AsyncResult<Void>> callback);
 

@@ -88,4 +88,9 @@ public class DefaultConfigElement implements ConfigElement {
     public CuratorEvent getCuratorEvent() {
         return curatorEvent;
     }
+
+    @Override
+    public boolean hasValue() {
+        return bytesResult != null;
+    }
 }

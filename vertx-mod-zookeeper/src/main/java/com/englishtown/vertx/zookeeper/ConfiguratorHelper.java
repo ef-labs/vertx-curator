@@ -4,13 +4,21 @@ import org.apache.curator.framework.api.CuratorWatcher;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 
+import java.util.List;
+
 /**
  *
  */
 public interface ConfiguratorHelper {
 
-    public void getConfigElement(String path, Handler<AsyncResult<ConfigElement>> callback);
+    void getConfigElement(String path, Handler<AsyncResult<ConfigElement>> callback);
 
-    public void getConfigElement(String path, CuratorWatcher watcher, Handler<AsyncResult<ConfigElement>> callback);
+    void getConfigElement(String path, MatchBehavior matchBehavior, Handler<AsyncResult<ConfigElement>> callback);
+
+    void getConfigElement(String path, CuratorWatcher watcher, Handler<AsyncResult<ConfigElement>> callback);
+
+    void getConfigElement(String path, CuratorWatcher watcher, MatchBehavior matchBehavior, Handler<AsyncResult<ConfigElement>> callback);
+
+    List<String> getPathSuffixes();
 
 }

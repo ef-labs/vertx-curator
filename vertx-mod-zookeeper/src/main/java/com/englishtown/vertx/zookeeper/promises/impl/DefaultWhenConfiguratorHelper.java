@@ -57,7 +57,7 @@ public class DefaultWhenConfiguratorHelper implements WhenConfiguratorHelper {
     }
 
     @Override
-    public List<String> getPathPrefixes() {
-        return configuratorHelper.getPathPrefixes();
+    public List<String> getPathSuffixes() {
+        return configuratorHelper.getPathSuffixes();
     }
 }

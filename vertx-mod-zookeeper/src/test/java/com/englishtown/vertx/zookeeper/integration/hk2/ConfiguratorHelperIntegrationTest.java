@@ -1,6 +1,7 @@
 package com.englishtown.vertx.zookeeper.integration.hk2;
 
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
+import com.englishtown.vertx.zookeeper.impl.JsonConfigZooKeeperConfigurator;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.zookeeper.CreateMode;
@@ -25,10 +26,10 @@ public class ConfiguratorHelperIntegrationTest extends AbstractIntegrationTest {
     protected JsonObject createZooKeeperConfig() {
         JsonObject json = super.createZooKeeperConfig();
 
-        return json.putArray("path_prefixes", new JsonArray()
-                .addString("/test/env/dev/application")
-                .addString("/test/env/dev")
-                .addString("/test/global"));
+        return json.putArray(JsonConfigZooKeeperConfigurator.FIELD_PATH_SUFFIXES, new JsonArray()
+                .addString(".dev.test_app")
+                .addString(".dev")
+                .addString(".test_app"));
     }
 
     @Override
@@ -36,12 +37,12 @@ public class ConfiguratorHelperIntegrationTest extends AbstractIntegrationTest {
         super.setUp();
         curatorFramework = zookeeperClient.getCuratorFramework();
 
-        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/global/cassandra/seeds", "10.0.0.1,10.0.0.2".getBytes());
-        tearDownPaths.add("/test/global/cassandra/seeds");
-        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/cassandra/seeds", "192.168.0.1,192.168.0.2".getBytes());
-        tearDownPaths.add("/test/env/dev/cassandra/seeds");
-        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/test/env/dev/application/cassandra/seeds", "0.0.0.0".getBytes());
-        tearDownPaths.add("/test/env/dev/application/cassandra/seeds");
+        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/cassandra/seeds.dev.test_app", "10.0.0.1,10.0.0.2".getBytes());
+        tearDownPaths.add("/cassandra/seeds.dev.test_app");
+        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/cassandra/seeds.dev", "192.168.0.1,192.168.0.2".getBytes());
+        tearDownPaths.add("/cassandra/seeds.dev");
+        curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath("/cassandra/seeds.test_app", "0.0.0.0".getBytes());
+        tearDownPaths.add("/cassandra/seeds.test_app");
     }
 
     @Test
@@ -50,35 +51,34 @@ public class ConfiguratorHelperIntegrationTest extends AbstractIntegrationTest {
         // First time we try and get the seeds variable, it should return 0.0.0.0
         configuratorHelper.getConfigElement("/cassandra/seeds")
                 .then(element -> {
-                    VertxAssert.assertNotNull(element);
-                    VertxAssert.assertEquals("0.0.0.0", element.asString());
+                    assertNotNull(element);
+                    assertEquals("10.0.0.1,10.0.0.2", element.asString());
 
                     // Assuming that is true then wipe out the application one and try again
                     try {
-                        curatorFramework.delete().forPath("/test/env/dev/application/cassandra/seeds");
+                        curatorFramework.delete().forPath("/cassandra/seeds.dev.test_app");
                         return configuratorHelper.getConfigElement("/cassandra/seeds");
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 })
                 .then(element -> {
-                    VertxAssert.assertNotNull(element);
-                    VertxAssert.assertEquals("192.168.0.1,192.168.0.2", element.asString());
+                    assertNotNull(element);
+                    assertEquals("192.168.0.1,192.168.0.2", element.asString());
 
                     // Now wipe out the environment znode and go again.
                     try {
-                        curatorFramework.delete().forPath("/test/env/dev/cassandra/seeds");
+                        curatorFramework.delete().forPath("/cassandra/seeds.dev");
                         return configuratorHelper.getConfigElement("/cassandra/seeds");
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 })
                 .then(element -> {
-                    VertxAssert.assertNotNull(element);
-                    VertxAssert.assertEquals("10.0.0.1,10.0.0.2", element.asString());
+                    assertNotNull(element);
+                    assertEquals("0.0.0.0", element.asString());
 
                     VertxAssert.testComplete();
-
                     return null;
                 })
                 .otherwise(this::onRejected);
@@ -98,7 +98,7 @@ public class ConfiguratorHelperIntegrationTest extends AbstractIntegrationTest {
         configuratorHelper.getConfigElement("/cassandra/seeds", watcher)
                 .then(element -> {
                     assertNotNull(element);
-                    assertEquals("0.0.0.0", element.asString());
+                    assertEquals("10.0.0.1,10.0.0.2", element.asString());
 
                     ZooKeeperOperation setData = operationBuilders.setData()
                             .data(updatedData.getBytes())

@@ -5,7 +5,6 @@ import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import com.google.common.base.Strings;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorWatcher;
-import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Context;
@@ -25,15 +24,10 @@ import static com.englishtown.vertx.zookeeper.MatchBehavior.FIRST;
  */
 public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
-    // TODO: Move to EnvVarZooKeeperConfigurator implementation
-//    private static final String ZOOKEEPER_PATH_PREFIXES_ENVVAR = "zookeeper_path_prefixes";
-//    private static final String PATH_DELIMITER = "\\|";
-//    pathPrefixes.addAll(Arrays.asList(basePathsString.split(PATH_DELIMITER)));
-
     private final ZooKeeperClient zooKeeperClient;
     private final ZooKeeperOperationBuilders zooKeeperOperationBuilders;
     private final Vertx vertx;
-    private List<String> pathPrefixes = new ArrayList<>();
+    private List<String> pathSuffixes = new ArrayList<>();
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultConfiguratorHelper.class);
 
@@ -51,13 +45,12 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
     }
 
     private void init(ZooKeeperConfigurator configurator) {
-        pathPrefixes = configurator.getPathPrefixes();
-        if (pathPrefixes == null) {
-            pathPrefixes = new ArrayList<>();
+        pathSuffixes = configurator.getPathSuffixes();
+        if (pathSuffixes == null) {
+            pathSuffixes = new ArrayList<>();
         }
-        if (pathPrefixes.isEmpty()) {
-            pathPrefixes.add("");
-        }
+        // Add an empty suffix last for exact path matching
+        pathSuffixes.add("");
     }
 
     @Override
@@ -89,11 +82,11 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
         List<AsyncResult<CuratorEvent>> results = new ArrayList<>();
         CountingCompletionHandler<Void> completionHandler = new CountingCompletionHandler<>(vertx);
 
-        for (int i = 0; i < pathPrefixes.size(); i++) {
+        for (int i = 0; i < pathSuffixes.size(); i++) {
             completionHandler.incRequired();
             results.add(null);
-            String prefix = pathPrefixes.get(i);
-            String path = (Strings.isNullOrEmpty(prefix)) ? elementPath : ZKPaths.makePath(prefix, elementPath);
+            String suffix = pathSuffixes.get(i);
+            String path = (Strings.isNullOrEmpty(suffix)) ? elementPath : elementPath + suffix;
 
             ZooKeeperOperation operation = zooKeeperOperationBuilders.getData()
                     .forPath(path)
@@ -229,7 +222,7 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
     }
 
     @Override
-    public List<String> getPathPrefixes() {
-        return pathPrefixes;
+    public List<String> getPathSuffixes() {
+        return pathSuffixes;
     }
 }

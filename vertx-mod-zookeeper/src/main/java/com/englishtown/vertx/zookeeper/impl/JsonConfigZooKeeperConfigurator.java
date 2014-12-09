@@ -27,8 +27,16 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     protected String connectionString;
     protected RetryPolicy retryPolicy;
     protected AuthPolicy authPolicy;
-    protected List<String> pathPrefixes;
+    protected List<String> pathSuffixes;
     protected EnsembleProvider ensembleProvider;
+
+    public final static String FIELD_CONNECTION_STRING = "connection_string";
+    public final static String FIELD_RETRY = "retry";
+    public final static String FIELD_AUTH = "auth";
+    public final static String FIELD_PATH_SUFFIXES = "path_suffixes";
+    public final static String FIELD_ENSEMBLE = "ensemble";
+
+    public final static String DEFAULT_CONNECTION_STRING = "127.0.0.1:2181";
 
     @Inject
     public JsonConfigZooKeeperConfigurator(Container container) {
@@ -40,19 +48,17 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     }
 
     protected void init(JsonObject config) {
-        initConnectionString(config);
-        initRetryPolicy(config.getObject("retry"));
-        initAuthPolicy(config.getObject("auth"));
-        initPathPrefixes(config.getArray("path_prefixes"));
-        initEnsembleProvider(config.getObject("ensemble"));
+        initConnectionString(config.getString(FIELD_CONNECTION_STRING));
+        initRetryPolicy(config.getObject(FIELD_RETRY));
+        initAuthPolicy(config.getObject(FIELD_AUTH));
+        initPathSuffixes(config.getArray(FIELD_PATH_SUFFIXES));
+        initEnsembleProvider(config.getObject(FIELD_ENSEMBLE));
     }
 
-    protected void initConnectionString(JsonObject config) {
-
-        String connectionString = config.getString("connection_string");
+    protected void initConnectionString(String connectionString) {
 
         if (connectionString == null || connectionString.isEmpty()) {
-            connectionString = "127.0.0.1:2181";
+            connectionString = DEFAULT_CONNECTION_STRING;
         }
 
         this.connectionString = connectionString;
@@ -96,7 +102,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
                 String password = authConfig.getString("password");
                 auth = username + ":" + password;
             } else {
-                auth = authConfig.getString("auth");
+                auth = authConfig.getString(FIELD_AUTH);
             }
 
             authPolicy = new AuthPolicy() {
@@ -117,7 +123,7 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     private List<String> convertToList(JsonArray jsonArray, String errorPrefix) {
         List<String> list = new ArrayList<>();
 
-        if (jsonArray != null){
+        if (jsonArray != null) {
             for (Object obj : jsonArray) {
                 if (obj instanceof String) {
                     list.add((String) obj);
@@ -130,8 +136,8 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
         return list;
     }
 
-    protected void initPathPrefixes(JsonArray pathConfig) {
-        pathPrefixes = convertToList(pathConfig, "Path prefixes must be of type string: ");
+    protected void initPathSuffixes(JsonArray pathConfig) {
+        pathSuffixes = convertToList(pathConfig, "Path suffixes must be of type string: ");
     }
 
     protected void initEnsembleProvider(JsonObject ensemble) {
@@ -194,13 +200,13 @@ public class JsonConfigZooKeeperConfigurator implements ZooKeeperConfigurator {
     }
 
     /**
-     * Optional path prefixes used when getting data with the {@link com.englishtown.vertx.zookeeper.ConfiguratorHelper}
+     * Optional path suffixes used when getting data with the {@link com.englishtown.vertx.zookeeper.ConfiguratorHelper}
      *
-     * @return the list of path prefixes
+     * @return the list of path suffixes
      */
     @Override
-    public List<String> getPathPrefixes() {
-        return pathPrefixes;
+    public List<String> getPathSuffixes() {
+        return pathSuffixes;
     }
 
     @Override

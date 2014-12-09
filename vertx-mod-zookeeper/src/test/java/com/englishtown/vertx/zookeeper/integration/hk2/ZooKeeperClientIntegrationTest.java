@@ -3,6 +3,7 @@ package com.englishtown.vertx.zookeeper.integration.hk2;
 import com.englishtown.promises.Promise;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import com.englishtown.vertx.zookeeper.builders.CreateBuilder;
+import com.englishtown.vertx.zookeeper.impl.JsonConfigZooKeeperConfigurator;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorEventType;
 import org.apache.curator.framework.api.CuratorWatcher;
@@ -41,7 +42,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
     protected JsonObject createZooKeeperConfig() {
         JsonObject json = super.createZooKeeperConfig();
 
-        return json.putObject("auth", new JsonObject()
+        return json.putObject(JsonConfigZooKeeperConfigurator.FIELD_AUTH, new JsonObject()
                 .putString("scheme", "digest")
                 .putString("username", "test_user")
                 .putString("password", "test_user_password"));

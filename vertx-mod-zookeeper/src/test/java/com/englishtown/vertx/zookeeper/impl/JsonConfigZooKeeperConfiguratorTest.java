@@ -44,31 +44,29 @@ public class JsonConfigZooKeeperConfiguratorTest {
         config.putObject("zookeeper", zookeeper);
 
         // connection_string
-        JsonObject connStr = new JsonObject();
-        zookeeper.putObject("connection_string", connStr);
-        zookeeper.putString("connection_string", "cs");
+        zookeeper.putString(JsonConfigZooKeeperConfigurator.FIELD_CONNECTION_STRING, "cs");
 
         // retry
         JsonObject retry = new JsonObject();
-        zookeeper.putObject("retry", retry);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_RETRY, retry);
         retry.putString("type", "org.apache.curator.retry.RetryNTimes");
 
         // auth
         JsonObject auth = new JsonObject();
-        zookeeper.putObject("auth", auth);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_AUTH, auth);
         auth.putString("scheme", "digest");
         auth.putString("username", "name");
         auth.putString("password", "pass");
 
-        // path_prefixes
-        JsonArray pathPrefixes = new JsonArray();
-        zookeeper.putArray("path_prefixes", pathPrefixes);
-        pathPrefixes.add("a")
+        // path_suffixes
+        JsonArray pathSuffixes = new JsonArray();
+        zookeeper.putArray(JsonConfigZooKeeperConfigurator.FIELD_PATH_SUFFIXES, pathSuffixes);
+        pathSuffixes.add("a")
                 .add("b");
 
         // ensemble
         JsonObject ensemble = new JsonObject();
-        zookeeper.putObject("ensemble", ensemble);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_ENSEMBLE, ensemble);
         ensemble.putString("name", "org.apache.curator.ensemble.exhibitor.ExhibitorEnsembleProvider");
         JsonArray hosts = new JsonArray();
         ensemble.putArray("hosts", hosts);
@@ -89,9 +87,9 @@ public class JsonConfigZooKeeperConfiguratorTest {
         assertEquals("digest", authPolicy.geScheme());
         assertEquals("name:pass", authPolicy.getAuth());
 
-        List<String> pathPrefixList = target.getPathPrefixes();
-        assertEquals("a", pathPrefixList.get(0));
-        assertEquals("b", pathPrefixList.get(1));
+        List<String> pathSuffixList = target.getPathSuffixes();
+        assertEquals("a", pathSuffixList.get(0));
+        assertEquals("b", pathSuffixList.get(1));
 
         EnsembleProvider ensembleProvider = target.getEnsembleProvider();
         assertNotNull(ensembleProvider);
@@ -112,7 +110,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // retry
         JsonObject retry = new JsonObject();
-        zookeeper.putObject("retry", retry);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_RETRY, retry);
         retry.putString("type", "org.apache.curator.retry.RetryOneTime");
 
         when(container.config()).thenReturn(config);
@@ -135,7 +133,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // retry
         JsonObject retry = new JsonObject();
-        zookeeper.putObject("retry", retry);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_RETRY, retry);
         retry.putString("type", "org.apache.curator.retry.RetryUntilElapsed");
 
         when(container.config()).thenReturn(config);
@@ -158,7 +156,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // retry
         JsonObject retry = new JsonObject();
-        zookeeper.putObject("retry", retry);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_RETRY, retry);
         retry.putString("type", "org.apache.curator.retry.ExponentialBackoffRetry");
 
         when(container.config()).thenReturn(config);
@@ -181,7 +179,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // retry
         JsonObject retry = new JsonObject();
-        zookeeper.putObject("retry", retry);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_RETRY, retry);
         retry.putString("type", "org.apache.curator.retry.BoundedExponentialBackoffRetry");
 
         when(container.config()).thenReturn(config);
@@ -204,7 +202,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // retry
         JsonObject retry = new JsonObject();
-        zookeeper.putObject("retry", retry);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_RETRY, retry);
         retry.putString("type", null);
 
         when(container.config()).thenReturn(config);
@@ -227,7 +225,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // auth
         JsonObject auth = new JsonObject();
-        zookeeper.putObject("auth", auth);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_AUTH, auth);
         auth.putString("scheme", "auth");
         auth.putString("auth", "test_auth");
 
@@ -236,12 +234,12 @@ public class JsonConfigZooKeeperConfiguratorTest {
         JsonConfigZooKeeperConfigurator target = new JsonConfigZooKeeperConfigurator(container);
 
         ZooKeeperConfigurator.AuthPolicy authPolicy = target.getAuthPolicy();
-        assertEquals("auth", authPolicy.geScheme());
+        assertEquals(JsonConfigZooKeeperConfigurator.FIELD_AUTH, authPolicy.geScheme());
         assertEquals("test_auth", authPolicy.getAuth());
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testJsonConfigZooKeeperConfigurator_InvalidPathPrefix() throws Exception {
+    public void testJsonConfigZooKeeperConfigurator_InvalidPathSuffix() throws Exception {
 
         // the entire config json
         JsonObject config = new JsonObject();
@@ -250,10 +248,10 @@ public class JsonConfigZooKeeperConfiguratorTest {
         JsonObject zookeeper = new JsonObject();
         config.putObject("zookeeper", zookeeper);
 
-        // path_prefixes
-        JsonArray pathPrefixes = new JsonArray();
-        zookeeper.putArray("path_prefixes", pathPrefixes);
-        pathPrefixes.add("a")
+        // path_suffixes
+        JsonArray pathSuffixes = new JsonArray();
+        zookeeper.putArray(JsonConfigZooKeeperConfigurator.FIELD_PATH_SUFFIXES, pathSuffixes);
+        pathSuffixes.add("a")
                 .add(1);
 
         when(container.config()).thenReturn(config);
@@ -273,7 +271,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // ensemble
         JsonObject ensemble = new JsonObject();
-        zookeeper.putObject("ensemble", ensemble);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_ENSEMBLE, ensemble);
 
         when(container.config()).thenReturn(config);
 
@@ -293,7 +291,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // ensemble
         JsonObject ensemble = new JsonObject();
-        zookeeper.putObject("ensemble", ensemble);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_ENSEMBLE, ensemble);
         ensemble.putString("name", "org.apache.curator.ensemble.exhibitor.ExhibitorEnsembleProvider");
 
         JsonArray hosts = new JsonArray();
@@ -317,7 +315,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // ensemble
         JsonObject ensemble = new JsonObject();
-        zookeeper.putObject("ensemble", ensemble);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_ENSEMBLE, ensemble);
         ensemble.putString("name", "org.apache.curator.ensemble.exhibitor.ExhibitorEnsembleProvider");
         JsonArray hosts = new JsonArray();
         ensemble.putArray("hosts", hosts);
@@ -339,7 +337,7 @@ public class JsonConfigZooKeeperConfiguratorTest {
 
         // ensemble
         JsonObject ensemble = new JsonObject();
-        zookeeper.putObject("ensemble", ensemble);
+        zookeeper.putObject(JsonConfigZooKeeperConfigurator.FIELD_ENSEMBLE, ensemble);
         ensemble.putString("name", "not_exists");
 
         when(container.config()).thenReturn(config);

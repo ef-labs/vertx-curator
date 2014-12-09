@@ -6,6 +6,7 @@ import com.englishtown.vertx.promises.hk2.HK2WhenBinder;
 import com.englishtown.vertx.zookeeper.ZooKeeperClient;
 import com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders;
 import com.englishtown.vertx.zookeeper.hk2.HK2WhenZooKeeperBinder;
+import com.englishtown.vertx.zookeeper.impl.JsonConfigZooKeeperConfigurator;
 import com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper;
 import com.englishtown.vertx.zookeeper.promises.WhenZooKeeperClient;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -91,7 +92,7 @@ public abstract class AbstractIntegrationTest extends TestVerticle {
 
     protected JsonObject createZooKeeperConfig() {
         return new JsonObject()
-                .putString("connection_string", "127.0.0.1:2181");
+                .putString(JsonConfigZooKeeperConfigurator.FIELD_CONNECTION_STRING, "127.0.0.1:2181");
     }
 
     protected <T> Promise<T> onRejected(Throwable t) {

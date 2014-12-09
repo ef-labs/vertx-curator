@@ -108,9 +108,9 @@ public class DefaultConfiguratorHelperTest {
     }
 
     @Test
-    public void testGetConfigElement_NullPathPrefixes() throws Exception {
+    public void testGetConfigElement_NullPathSuffixes() throws Exception {
 
-        when(configurator.getPathPrefixes()).thenReturn(null);
+        when(configurator.getPathSuffixes()).thenReturn(null);
 
         configuratorHelper.getConfigElement(elementPath, watcher, result -> {
             assertEquals(data, result.result().asBytes());

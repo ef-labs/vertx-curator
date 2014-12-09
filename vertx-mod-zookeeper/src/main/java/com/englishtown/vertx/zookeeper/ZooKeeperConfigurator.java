@@ -41,11 +41,11 @@ public interface ZooKeeperConfigurator {
     AuthPolicy getAuthPolicy();
 
     /**
-     * Optional path prefixes used when getting data with the {@link com.englishtown.vertx.zookeeper.promises.WhenConfiguratorHelper}
+     * Optional path suffixes used when getting data with the {@link com.englishtown.vertx.zookeeper.ConfiguratorHelper}
      *
-     * @return the list of path prefixes
+     * @return the list of path suffixes
      */
-    List<String> getPathPrefixes();
+    List<String> getPathSuffixes();
 
     /**
      * Callback for when the configurator is ready

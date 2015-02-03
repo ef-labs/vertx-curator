@@ -2,25 +2,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>vertx-zookeeper</artifactId>
+    <artifactId>vertx-zookeeper-parent</artifactId>
     <packaging>pom</packaging>
     <version>2.0.0-SNAPSHOT</version>
 
     <modules>
-        <module>ext-zookeeper</module>
+        <module>vertx-zookeeper</module>
     </modules>
 
     <parent>
         <groupId>com.englishtown.vertx</groupId>
         <artifactId>oss-parent-vertx</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.0.0</version>
     </parent>
 
     <properties>
-        <vertx.when.version>4.0.0-SNAPSHOT</vertx.when.version>
-        <curator.version>2.6.0</curator.version>
-        <vertx.hk2.version>2.0.0-SNAPSHOT</vertx.hk2.version>
-        <vertx.guice.version>2.0.0-SNAPSHOT</vertx.guice.version>
+        <vertx.when.version>4.0.0-RC1</vertx.when.version>
+        <curator.version>2.7.1</curator.version>
+        <vertx.hk2.version>2.0.0-RC1</vertx.hk2.version>
+        <vertx.guice.version>2.0.0-RC1</vertx.guice.version>
         <when.java.version>3.0.1</when.java.version>
     </properties>
 
@@ -33,18 +33,18 @@
             </dependency>
             <dependency>
                 <groupId>com.englishtown.vertx</groupId>
-                <artifactId>ext-when</artifactId>
+                <artifactId>vertx-when</artifactId>
                 <version>${vertx.when.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.englishtown.vertx</groupId>
-                <artifactId>ext-hk2</artifactId>
+                <artifactId>vertx-hk2</artifactId>
                 <version>${vertx.hk2.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>com.englishtown.vertx</groupId>
-                <artifactId>ext-guice</artifactId>
+                <artifactId>vertx-guice</artifactId>
                 <version>${vertx.guice.version}</version>
                 <scope>provided</scope>
             </dependency>

@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>ext-zookeeper</artifactId>
+    <artifactId>vertx-zookeeper</artifactId>
 
     <parent>
-        <artifactId>vertx-zookeeper</artifactId>
+        <artifactId>vertx-zookeeper-parent</artifactId>
         <groupId>com.englishtown.vertx</groupId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
@@ -17,16 +17,16 @@
         </dependency>
         <dependency>
             <groupId>com.englishtown.vertx</groupId>
-            <artifactId>ext-when</artifactId>
+            <artifactId>vertx-when</artifactId>
         </dependency>
         <dependency>
             <groupId>com.englishtown.vertx</groupId>
-            <artifactId>ext-hk2</artifactId>
+            <artifactId>vertx-hk2</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.englishtown.vertx</groupId>
-            <artifactId>ext-guice</artifactId>
+            <artifactId>vertx-guice</artifactId>
             <scope>provided</scope>
         </dependency>
 

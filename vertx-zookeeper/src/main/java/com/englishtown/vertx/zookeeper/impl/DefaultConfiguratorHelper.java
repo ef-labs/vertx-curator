@@ -20,6 +20,7 @@ import static com.englishtown.vertx.zookeeper.MatchBehavior.FIRST;
  */
 public class DefaultConfiguratorHelper implements ConfiguratorHelper {
 
+    private final ZooKeeperConfigurator configurator;
     private final ZooKeeperClient zooKeeperClient;
     private final ZooKeeperOperationBuilders zooKeeperOperationBuilders;
     private final Vertx vertx;
@@ -33,6 +34,7 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
             ZooKeeperClient zooKeeperClient,
             ZooKeeperOperationBuilders zooKeeperOperationBuilders,
             Vertx vertx) {
+        this.configurator = configurator;
         this.zooKeeperClient = zooKeeperClient;
         this.zooKeeperOperationBuilders = zooKeeperOperationBuilders;
         this.vertx = vertx;
@@ -137,6 +139,15 @@ public class DefaultConfiguratorHelper implements ConfiguratorHelper {
             // We didn't find a matching node, so we just resolve with null to show we didn't find one
             callback.handle(Future.succeededFuture(new DefaultConfigElement(null)));
         });
+    }
+
+    @Override
+    public ConfiguratorHelper usingNamespace(String namespace) {
+        return new DefaultConfiguratorHelper(
+                configurator,
+                zooKeeperClient.usingNamespace(namespace),
+                zooKeeperOperationBuilders,
+                vertx);
     }
 
     private boolean nodeMatches(CuratorEvent event, MatchBehavior matchBehavior) {

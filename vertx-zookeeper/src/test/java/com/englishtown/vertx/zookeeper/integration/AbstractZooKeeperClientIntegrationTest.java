@@ -1,4 +1,4 @@
-package com.englishtown.vertx.zookeeper.integration.hk2;
+package com.englishtown.vertx.zookeeper.integration;
 
 import com.englishtown.promises.Promise;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
@@ -24,16 +24,14 @@ import java.util.UUID;
 /**
  * Integration tests for {@link com.englishtown.vertx.zookeeper.builders.ZooKeeperOperationBuilders} and {@link com.englishtown.vertx.zookeeper.ZooKeeperClient}
  */
-public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
+public abstract class AbstractZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
 
-    private String path = "/test/" + UUID.randomUUID();
     private List<ACL> acls = new ArrayList<>();
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
 
-        tearDownPaths.add(path);
         acls.add(new ACL(ZooDefs.Perms.ALL, ZooDefs.Ids.AUTH_IDS));
     }
 
@@ -49,6 +47,8 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     public void testFullLifeCycle() throws Exception {
+
+        String path = "/full_lifecycle";
 
         JsonObject data1 = new JsonObject()
                 .put("p1", "full lifecycle")
@@ -112,6 +112,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
     @Test
     public void testGetChildren() throws Exception {
 
+        String path = "/children";
 
         zookeeperClient.getCuratorFramework().create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path + "/child1");
         zookeeperClient.getCuratorFramework().create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path + "/child2");
@@ -142,6 +143,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
     @Test
     public void testCreate() throws Exception {
 
+        String path = "/create";
         String data = "test data";
 
         ZooKeeperOperation operation = operationBuilders
@@ -180,6 +182,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
     @Test
     public void testDelete() throws Exception {
 
+        String path = "/delete";
         zookeeperClient.getCuratorFramework().create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path + "/child1");
 
         ZooKeeperOperation operation = operationBuilders
@@ -205,6 +208,7 @@ public class ZooKeeperClientIntegrationTest extends AbstractIntegrationTest {
     @Test
     public void testACLs() throws Exception {
 
+        String path = "/acls";
         List<Promise<CuratorEvent>> promises = new ArrayList<>();
 
         String path1 = path + "/acl1";

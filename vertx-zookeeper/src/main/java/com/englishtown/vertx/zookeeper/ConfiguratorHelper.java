@@ -19,6 +19,8 @@ public interface ConfiguratorHelper {
 
     void getConfigElement(String path, CuratorWatcher watcher, MatchBehavior matchBehavior, Handler<AsyncResult<ConfigElement>> callback);
 
+    ConfiguratorHelper usingNamespace(String namespace);
+
     List<String> getPathSuffixes();
 
 }

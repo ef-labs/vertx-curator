@@ -43,7 +43,8 @@
         </dependency>
         <dependency>
             <groupId>com.englishtown</groupId>
-            <artifactId>when.java-testtools</artifactId>
+            <artifactId>when.java</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>

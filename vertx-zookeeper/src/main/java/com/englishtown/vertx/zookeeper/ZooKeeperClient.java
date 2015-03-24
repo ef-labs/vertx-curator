@@ -14,6 +14,8 @@ public interface ZooKeeperClient {
 
     void execute(ZooKeeperOperation operation, Handler<AsyncResult<CuratorEvent>> handler);
 
+    ZooKeeperClient usingNamespace(String namespace);
+
     boolean initialized();
 
     void onReady(Handler<AsyncResult<Void>> callback);

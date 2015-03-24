@@ -20,6 +20,8 @@ public interface WhenConfiguratorHelper {
 
     Promise<ConfigElement> getConfigElement(String path, CuratorWatcher watcher, MatchBehavior matchBehavior);
 
+    WhenConfiguratorHelper usingNamespace(String namespace);
+
     List<String> getPathSuffixes();
 
 }

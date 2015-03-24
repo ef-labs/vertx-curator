@@ -43,6 +43,12 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
         });
     }
 
+    private DefaultZooKeeperClient(Vertx vertx, CuratorFramework framework, AsyncResult<Void> initResult) {
+        this.vertx = vertx;
+        this.framework = framework;
+        this.initResult = initResult;
+    }
+
     private void init(ZooKeeperConfigurator configurator) {
 
         Builder builder = builder().retryPolicy(configurator.getRetryPolicy());
@@ -84,6 +90,14 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
         } catch (Exception e) {
             handler.handle(Future.failedFuture(e));
         }
+    }
+
+    @Override
+    public ZooKeeperClient usingNamespace(String namespace) {
+        if (!initialized() || framework == null) {
+            throw new IllegalStateException("Cannot call usingNamespace() until after onReady() successfully completes");
+        }
+        return new DefaultZooKeeperClient(vertx, framework.usingNamespace(namespace), initResult);
     }
 
     @Override

@@ -46,6 +46,11 @@ public class DefaultWhenZooKeeperClient implements WhenZooKeeperClient {
     }
 
     @Override
+    public WhenZooKeeperClient usingNamespace(String namespace) {
+        return new DefaultWhenZooKeeperClient(client.usingNamespace(namespace), when);
+    }
+
+    @Override
     public boolean initialized() {
         return client.initialized();
     }

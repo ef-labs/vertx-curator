@@ -13,6 +13,8 @@ public interface WhenZooKeeperClient {
 
     Promise<CuratorEvent> execute(ZooKeeperOperation operation);
 
+    WhenZooKeeperClient usingNamespace(String namespace);
+
     boolean initialized();
 
     Promise<Void> onReady();

@@ -57,6 +57,11 @@ public class DefaultWhenConfiguratorHelper implements WhenConfiguratorHelper {
     }
 
     @Override
+    public WhenConfiguratorHelper usingNamespace(String namespace) {
+        return new DefaultWhenConfiguratorHelper(configuratorHelper.usingNamespace(namespace), when);
+    }
+
+    @Override
     public List<String> getPathSuffixes() {
         return configuratorHelper.getPathSuffixes();
     }

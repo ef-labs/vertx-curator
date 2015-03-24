@@ -1,7 +1,13 @@
 package com.englishtown.vertx.zookeeper.impl;
 
+import com.englishtown.vertx.zookeeper.ZooKeeperClient;
 import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.ensemble.EnsembleProvider;
 import org.apache.curator.framework.api.CuratorEvent;
@@ -14,11 +20,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -27,6 +28,8 @@ import static org.mockito.Mockito.*;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultZooKeeperClientTest {
+
+    private DefaultZooKeeperClient client;
 
     @Mock
     Vertx vertx;
@@ -42,7 +45,7 @@ public class DefaultZooKeeperClientTest {
     Handler<AsyncResult<Void>> handler;
     @Mock
     EnsembleProvider ensembleProvider;
-   @Mock
+    @Mock
     ZooKeeperOperation operation;
     @Mock
     Exception throwable;
@@ -60,63 +63,77 @@ public class DefaultZooKeeperClientTest {
     Logger logger;
     @Mock
     AsyncResult<CuratorEvent> asyncResultExecute;
-    @Mock
-    CuratorEvent curatorEvent;
     @Captor
     ArgumentCaptor<Handler<AsyncResult<CuratorEvent>>> handlerCaptorExecute;
 
     @Before
     public void setUp() throws Exception {
+
         when(vertx.getOrCreateContext()).thenReturn(context);
+
+        when(configurator.getConnectionString()).thenReturn("cs");
+        when(configurator.getAuthPolicy()).thenReturn(authPolicy);
+        when(authPolicy.getAuth()).thenReturn("auth");
+        when(ensembleProvider.getConnectionString()).thenReturn(JsonConfigZooKeeperConfigurator.DEFAULT_CONNECTION_STRING);
+        when(configurator.getEnsembleProvider()).thenReturn(ensembleProvider);
+        when(configurator.getRetryPolicy()).thenReturn(retryPolicy);
+
+        client = new DefaultZooKeeperClient(vertx, configurator);
+    }
+
+    private void runOnReady() {
+        verify(configurator).onReady(handlerCaptorOnReady.capture());
+        handlerCaptorOnReady.getValue().handle(asyncResultOnReady);
+    }
+
+    @Test
+    public void testOnReady() throws Exception {
+
+        runOnReady();
+
+        assertNotNull(client.getCuratorFramework());
+        assertTrue(client.initialized());
+
+        client.onReady(handler);
+        verify(handler).handle(anyObject());
+
     }
 
     @Test
     public void testInitialization_OnReadyFailed() throws Exception {
-        new DefaultZooKeeperClient(vertx, configurator).onReady(handler);
 
-        verify(configurator).onReady(handlerCaptorOnReady.capture());
         when(asyncResultOnReady.failed()).thenReturn(true);
-        handlerCaptorOnReady.getValue().handle(asyncResultOnReady);
+
+        client.onReady(handler);
+        runOnReady();
 
         verify(handler).handle(eq(asyncResultOnReady));
+
     }
 
     @Test
     public void testExecute_WithException() throws Exception {
-        DefaultZooKeeperClient target = new DefaultZooKeeperClient(vertx, configurator);
-        verify(configurator).onReady(handlerCaptorOnReady.capture());
-        when(configurator.getConnectionString()).thenReturn("cs");
-        when(configurator.getAuthPolicy()).thenReturn(authPolicy);
-        when(authPolicy.getAuth()).thenReturn("auth");
-        when(configurator.getRetryPolicy()).thenReturn(retryPolicy);
-        handlerCaptorOnReady.getValue().handle(asyncResultOnReady);
 
-        doThrow(throwable).when(operation).execute(eq(target), anyObject());
-        target.execute(operation, event -> {
-            assertEquals(throwable, event.cause());
-        });
+        doThrow(throwable).when(operation).execute(eq(client), any());
 
-        assertNotNull(target.getCuratorFramework());
+        runOnReady();
+
+        client.execute(operation, event -> assertEquals(throwable, event.cause()));
+        assertNotNull(client.getCuratorFramework());
+
     }
 
     @Test
     public void testExecute_Success() throws Exception {
 
-        DefaultZooKeeperClient target = new DefaultZooKeeperClient(vertx, configurator);
-        verify(configurator).onReady(handlerCaptorOnReady.capture());
-        when(configurator.getConnectionString()).thenReturn("cs");
-        when(configurator.getAuthPolicy()).thenReturn(authPolicy);
-        when(authPolicy.getAuth()).thenReturn("auth");
-        when(configurator.getRetryPolicy()).thenReturn(retryPolicy);
-        handlerCaptorOnReady.getValue().handle(asyncResultOnReady);
+        CuratorEvent curatorEvent = mock(CuratorEvent.class);
 
-        target.execute(operation, event -> {
-            assertEquals(curatorEvent, event.result());
-        });
+        runOnReady();
+        client.execute(operation, event -> assertEquals(curatorEvent, event.result()));
 
-        assertNotNull(target.getCuratorFramework());
+        assertNotNull(client.getCuratorFramework());
 
-        verify(operation).execute(eq(target), handlerCaptorExecute.capture());
+        verify(operation).execute(eq(client), handlerCaptorExecute.capture());
 
         when(asyncResultExecute.result()).thenReturn(curatorEvent);
         handlerCaptorExecute.getValue().handle(asyncResultExecute);
@@ -126,50 +143,37 @@ public class DefaultZooKeeperClientTest {
     }
 
     @Test
-    public void testOnReady() throws Exception {
-        DefaultZooKeeperClient target = new DefaultZooKeeperClient(vertx, configurator);
-        verify(configurator).onReady(handlerCaptorOnReady.capture());
-        when(configurator.getEnsembleProvider()).thenReturn(ensembleProvider);
-        when(configurator.getRetryPolicy()).thenReturn(retryPolicy);
-        handlerCaptorOnReady.getValue().handle(asyncResultOnReady);
+    public void testUsingNamespace() throws Exception {
 
-        assertNotNull(target.getCuratorFramework());
+        runOnReady();
 
-        assertTrue(target.initialized());
+        ZooKeeperClient namespaceClient = client.usingNamespace("test");
+        assertNotNull(namespaceClient);
+        assertNotNull(namespaceClient.getCuratorFramework());
 
-        target.onReady(handler);
-        verify(handler).handle(anyObject());
     }
 
     @Test
     public void testWrapWatcher_Success() throws Exception {
 
-        DefaultZooKeeperClient target = new DefaultZooKeeperClient(vertx, configurator);
-        verify(configurator).onReady(handlerCaptorOnReady.capture());
-        when(configurator.getEnsembleProvider()).thenReturn(ensembleProvider);
-        when(configurator.getRetryPolicy()).thenReturn(retryPolicy);
-        handlerCaptorOnReady.getValue().handle(asyncResultOnReady);
+        runOnReady();
 
-        target.wrapWatcher(watcher).process(watchedEvent);
+        client.wrapWatcher(watcher).process(watchedEvent);
         verify(context).runOnContext(handlerCaptorRunOnContext.capture());
         handlerCaptorRunOnContext.getValue().handle(null);
         verify(watcher).process(watchedEvent);
+
     }
 
     @Test
     public void testWrapWatcher_OnException() throws Exception {
 
-        DefaultZooKeeperClient target = new DefaultZooKeeperClient(vertx, configurator);
-        verify(configurator).onReady(handlerCaptorOnReady.capture());
-        when(configurator.getEnsembleProvider()).thenReturn(ensembleProvider);
-        when(configurator.getAuthPolicy()).thenReturn(authPolicy);
-        when(authPolicy.getAuth()).thenReturn("auth");
-        when(configurator.getRetryPolicy()).thenReturn(retryPolicy);
-        handlerCaptorOnReady.getValue().handle(asyncResultOnReady);
+        runOnReady();
 
         doThrow(throwable).when(watcher).process(watchedEvent);
-        target.wrapWatcher(watcher).process(watchedEvent);
+        client.wrapWatcher(watcher).process(watchedEvent);
         verify(context).runOnContext(handlerCaptorRunOnContext.capture());
         handlerCaptorRunOnContext.getValue().handle(null);
     }
+
 }

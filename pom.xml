@@ -18,10 +18,10 @@
 
     <properties>
         <curator.version>2.7.1</curator.version>
-        <vertx.version>3.0.0-milestone3</vertx.version>
-        <vertx.when.version>4.0.0-RC2</vertx.when.version>
-        <vertx.hk2.version>2.0.0-RC2</vertx.hk2.version>
-        <vertx.guice.version>2.0.0-RC2</vertx.guice.version>
+        <vertx.version>3.0.0-milestone4</vertx.version>
+        <vertx.when.version>4.0.0-RC3</vertx.when.version>
+        <vertx.hk2.version>2.0.0-RC3</vertx.hk2.version>
+        <vertx.guice.version>2.0.0-RC3</vertx.guice.version>
         <when.java.version>3.1.0</when.java.version>
     </properties>
 

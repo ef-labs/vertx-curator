@@ -18,10 +18,10 @@
 
     <properties>
         <curator.version>2.8.0</curator.version>
-        <vertx.version>3.0.0-milestone6</vertx.version>
-        <vertx.when.version>4.0.0-RC5</vertx.when.version>
-        <vertx.hk2.version>2.0.0-RC5</vertx.hk2.version>
-        <vertx.guice.version>2.0.0-RC5</vertx.guice.version>
+        <vertx.version>3.0.0-SNAPSHOT</vertx.version>
+        <vertx.when.version>4.0.0-SNAPSHOT</vertx.when.version>
+        <vertx.hk2.version>2.0.0-SNAPSHOT</vertx.hk2.version>
+        <vertx.guice.version>2.0.0-SNAPSHOT</vertx.guice.version>
         <when.java.version>3.1.0</when.java.version>
     </properties>
 
@@ -56,6 +56,12 @@
                 <artifactId>when.java</artifactId>
                 <version>${when.java.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-test</artifactId>
+                <version>${curator.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

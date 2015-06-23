@@ -10,6 +10,7 @@ import com.englishtown.vertx.zookeeper.promises.WhenZooKeeperClient;
 import io.vertx.core.json.JsonObject;
 import io.vertx.test.core.VertxTestBase;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.test.TestingServer;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 
@@ -28,12 +29,13 @@ public abstract class AbstractIntegrationTest extends VertxTestBase {
     protected WhenZooKeeperClient whenZookeeperClient;
     protected ZooKeeperOperationBuilders operationBuilders;
     protected WhenConfiguratorHelper configuratorHelper;
-
+    protected TestingServer testingServer;
 
     public void setUp() throws Exception {
         super.setUp();
         initLocator();
 
+        testingServer = createTestingServer();
         CountDownLatch latch = new CountDownLatch(1);
 
         vertx.runOnContext(aVoid -> {
@@ -88,20 +90,19 @@ public abstract class AbstractIntegrationTest extends VertxTestBase {
 
     @Override
     public void tearDown() throws Exception {
-
-        zookeeperClient.getCuratorFramework().usingNamespace(null)
-                .delete()
-                .deletingChildrenIfNeeded()
-                .forPath("/" + testNamespace);
-
         originCuratorFramework.close();
+        testingServer.close();
         super.tearDown();
 
     }
 
+    protected TestingServer createTestingServer() throws Exception {
+        return new TestingServer();
+    }
+
     protected JsonObject createZooKeeperConfig() {
         return new JsonObject()
-                .put(JsonConfigZooKeeperConfigurator.FIELD_CONNECTION_STRING, "127.0.0.1:2181");
+                .put(JsonConfigZooKeeperConfigurator.FIELD_CONNECTION_STRING, testingServer.getConnectString());
     }
 
     protected <T> Promise<T> onRejected(Throwable t) {

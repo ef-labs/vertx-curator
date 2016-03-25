@@ -4,12 +4,12 @@ import com.englishtown.vertx.zookeeper.ZooKeeperClient;
 import com.englishtown.vertx.zookeeper.ZooKeeperConfigurator;
 import com.englishtown.vertx.zookeeper.ZooKeeperOperation;
 import io.vertx.core.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.curator.ensemble.EnsembleProvider;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorEvent;
 import org.apache.curator.framework.api.CuratorWatcher;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -36,11 +36,17 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
 
         configurator.onReady(result -> {
             if (result.failed()) {
-                runOnReadyCallbacks(result);
-                return;
+                initResult = result;
+            } else {
+                try {
+                    initResult = init(configurator);
+                } catch (Throwable t) {
+                    initResult = Future.failedFuture(t);
+                }
             }
-            init(configurator);
+            runOnReadyCallbacks(initResult);
         });
+
     }
 
     private DefaultZooKeeperClient(Vertx vertx, CuratorFramework framework, AsyncResult<Void> initResult) {
@@ -49,7 +55,7 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
         this.initResult = initResult;
     }
 
-    private void init(ZooKeeperConfigurator configurator) {
+    private AsyncResult<Void> init(ZooKeeperConfigurator configurator) throws Exception {
 
         Builder builder = builder().retryPolicy(configurator.getRetryPolicy());
 
@@ -67,9 +73,10 @@ public class DefaultZooKeeperClient implements ZooKeeperClient {
 
         framework = builder.build();
         framework.start();
+        framework.getZookeeperClient().getZooKeeper();
 
-        runOnReadyCallbacks(Future.succeededFuture(null));
-
+        logger.info("Zookeeper has successfully started");
+        return Future.succeededFuture();
     }
 
     private void runOnReadyCallbacks(AsyncResult<Void> result) {

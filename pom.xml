@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>vertx-zookeeper-parent</artifactId>
+    <artifactId>vertx-curator-parent</artifactId>
     <packaging>pom</packaging>
-    <version>2.2.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <modules>
-        <module>vertx-zookeeper</module>
+        <module>vertx-curator</module>
     </modules>
 
     <parent>
@@ -17,10 +17,11 @@
     </parent>
 
     <properties>
-        <curator.version>2.9.0</curator.version>
-        <vertx.when.version>4.1.0</vertx.when.version>
-        <vertx.hk2.version>2.1.0</vertx.hk2.version>
-        <vertx.guice.version>2.1.0</vertx.guice.version>
+        <vertx.version>3.2.1</vertx.version>
+        <curator.version>3.1.0</curator.version>
+        <vertx.when.version>4.1.1</vertx.when.version>
+        <vertx.hk2.version>2.3.0</vertx.hk2.version>
+        <vertx.guice.version>2.2.0</vertx.guice.version>
         <when.java.version>3.1.0</when.java.version>
     </properties>
 

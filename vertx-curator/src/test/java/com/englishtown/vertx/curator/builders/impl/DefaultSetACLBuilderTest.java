@@ -2,6 +2,8 @@ package com.englishtown.vertx.curator.builders.impl;
 
 import com.englishtown.vertx.curator.CuratorClient;
 import com.englishtown.vertx.curator.CuratorOperation;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.*;
 import org.apache.zookeeper.data.ACL;
@@ -10,8 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 
 import java.util.List;
 
@@ -25,20 +25,16 @@ import static org.mockito.Mockito.when;
 public class DefaultSetACLBuilderTest {
 
     @Mock
-    CuratorClient client;
-
+    private CuratorClient client;
     @Mock
-    CuratorFramework framework;
-
+    private CuratorFramework framework;
+    @Mock(extraInterfaces = ErrorListenerPathable.class)
+    private SetACLBuilder builder;
     @Mock
-    SetACLBuilder builder;
+    private List<ACL> aclList;
 
-    String path = "/test/path";
-
-    @Mock
-    List<ACL> aclList;
-
-    int version = 1;
+    private String path = "/test/path";
+    private int version = 1;
 
     @Mock
     Handler<AsyncResult<CuratorEvent>> handler;
@@ -47,7 +43,7 @@ public class DefaultSetACLBuilderTest {
     BackgroundPathable<Stat> pathable;
 
     @Test
-    public void testBuild() throws Exception{
+    public void testBuild() throws Exception {
 
         DefaultSetACLBuilder target = new DefaultSetACLBuilder();
 
@@ -59,12 +55,13 @@ public class DefaultSetACLBuilderTest {
         when(client.getCuratorFramework()).thenReturn(framework);
         when(framework.setACL()).thenReturn(builder);
         when(builder.withACL(aclList)).thenReturn(pathable);
-        when(pathable.inBackground(any(BackgroundCallback.class))).thenReturn(pathable);
+        ErrorListenerPathable<Stat> elp = (ErrorListenerPathable<Stat>) builder;
+        when(pathable.inBackground(any(BackgroundCallback.class))).thenReturn(elp);
 
         operation.execute(client, handler);
 
         verify(builder).withACL(aclList);
         verify(pathable).inBackground(any(BackgroundCallback.class));
-        verify(pathable).forPath(path);
+        verify(elp).forPath(path);
     }
 }

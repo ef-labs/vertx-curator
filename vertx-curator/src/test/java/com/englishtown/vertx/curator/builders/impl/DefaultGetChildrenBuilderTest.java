@@ -11,6 +11,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
+import java.util.List;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,21 +23,17 @@ import static org.mockito.Mockito.when;
 public class DefaultGetChildrenBuilderTest {
 
     @Mock
-    CuratorClient client;
-
+    private CuratorClient client;
     @Mock
-    CuratorFramework framework;
-
+    private CuratorFramework framework;
+    @Mock(extraInterfaces = ErrorListenerPathable.class)
+    private GetChildrenBuilder builder;
     @Mock
-    GetChildrenBuilder builder;
-
+    private CuratorWatcher watcher;
     @Mock
-    CuratorWatcher watcher;
+    private Handler<AsyncResult<CuratorEvent>> handler;
 
-    String path = "/test/path";
-
-    @Mock
-    Handler<AsyncResult<CuratorEvent>> handler;
+    private String path = "/test/path";
 
     @Test
     public void testBuild() throws Exception{
@@ -48,11 +46,12 @@ public class DefaultGetChildrenBuilderTest {
 
         when(client.getCuratorFramework()).thenReturn(framework);
         when(framework.getChildren()).thenReturn(builder);
-        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(builder);
+        ErrorListenerPathable<List<String>> elp = (ErrorListenerPathable<List<String>>) builder;
+        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(elp);
 
         operation.execute(client, handler);
 
         verify(builder).inBackground(any(BackgroundCallback.class));
-        verify(builder).forPath(path);
+        verify(elp).forPath(path);
     }
 }

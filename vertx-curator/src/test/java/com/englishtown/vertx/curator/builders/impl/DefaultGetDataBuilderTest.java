@@ -4,6 +4,7 @@ import com.englishtown.vertx.curator.CuratorClient;
 import com.englishtown.vertx.curator.CuratorOperation;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.*;
+import org.apache.zookeeper.data.Stat;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -21,21 +22,17 @@ import static org.mockito.Mockito.when;
 public class DefaultGetDataBuilderTest {
 
     @Mock
-    CuratorClient client;
-
+    private CuratorClient client;
     @Mock
-    CuratorFramework framework;
-
+    private CuratorFramework framework;
+    @Mock(extraInterfaces = ErrorListenerPathable.class)
+    private GetDataBuilder builder;
     @Mock
-    GetDataBuilder builder;
-
+    private CuratorWatcher watcher;
     @Mock
-    CuratorWatcher watcher;
+    private Handler<AsyncResult<CuratorEvent>> handler;
 
-    String path = "/test/path";
-
-    @Mock
-    Handler<AsyncResult<CuratorEvent>> handler;
+    private String path = "/test/path";
 
     @Test
     public void testBuild() throws Exception{
@@ -47,12 +44,13 @@ public class DefaultGetDataBuilderTest {
 
         when(client.getCuratorFramework()).thenReturn(framework);
         when(framework.getData()).thenReturn(builder);
-        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(builder);
+        ErrorListenerPathable<byte[]> elp = (ErrorListenerPathable<byte[]>) builder;
+        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(elp);
 
         operation.execute(client, handler);
 
         verify(builder).inBackground(any(BackgroundCallback.class));
-        verify(builder).forPath(path);
+        verify(elp).forPath(path);
     }
 
     @Test
@@ -64,11 +62,12 @@ public class DefaultGetDataBuilderTest {
 
         when(client.getCuratorFramework()).thenReturn(framework);
         when(framework.getData()).thenReturn(builder);
-        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(builder);
+        ErrorListenerPathable<byte[]> elp = (ErrorListenerPathable<byte[]>) builder;
+        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(elp);
 
         operation.execute(client, handler);
 
         verify(builder).inBackground(any(BackgroundCallback.class));
-        verify(builder).forPath(path);
+        verify(elp).forPath(path);
     }
 }

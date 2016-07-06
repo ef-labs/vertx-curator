@@ -3,10 +3,8 @@ package com.englishtown.vertx.curator.builders.impl;
 import com.englishtown.vertx.curator.CuratorClient;
 import com.englishtown.vertx.curator.CuratorOperation;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.BackgroundCallback;
-import org.apache.curator.framework.api.CuratorEvent;
-import org.apache.curator.framework.api.CuratorWatcher;
-import org.apache.curator.framework.api.ExistsBuilder;
+import org.apache.curator.framework.api.*;
+import org.apache.zookeeper.data.Stat;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -24,21 +22,17 @@ import static org.mockito.Mockito.when;
 public class DefaultExistsBuilderTest {
 
     @Mock
-    CuratorClient client;
-
+    private CuratorClient client;
     @Mock
-    CuratorFramework framework;
-
+    private CuratorFramework framework;
+    @Mock(extraInterfaces = ErrorListenerPathable.class)
+    private ExistsBuilder builder;
     @Mock
-    ExistsBuilder builder;
-
+    private CuratorWatcher watcher;
     @Mock
-    CuratorWatcher watcher;
+    private Handler<AsyncResult<CuratorEvent>> handler;
 
-    String path = "/test/path";
-
-    @Mock
-    Handler<AsyncResult<CuratorEvent>> handler;
+    private String path = "/test/path";
 
     @Test
     public void testBuild() throws Exception{
@@ -51,12 +45,13 @@ public class DefaultExistsBuilderTest {
 
         when(client.getCuratorFramework()).thenReturn(framework);
         when(framework.checkExists()).thenReturn(builder);
-        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(builder);
+        ErrorListenerPathable<Stat> elp = (ErrorListenerPathable<Stat>) builder;
+        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(elp);
 
         operation.execute(client, handler);
 
         verify(builder).inBackground(any(BackgroundCallback.class));
         verify(builder).usingWatcher(any(CuratorWatcher.class));
-        verify(builder).forPath(path);
+        verify(elp).forPath(path);
     }
 }

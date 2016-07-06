@@ -4,12 +4,15 @@ import com.englishtown.vertx.curator.CuratorClient;
 import com.englishtown.vertx.curator.CuratorOperation;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.*;
+import org.apache.zookeeper.data.ACL;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+
+import java.util.List;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -21,18 +24,15 @@ import static org.mockito.Mockito.when;
 public class DefaultGetACLBuilderTest {
 
     @Mock
-    CuratorClient client;
-
+    private CuratorClient client;
     @Mock
-    CuratorFramework framework;
-
+    private CuratorFramework framework;
+    @Mock(extraInterfaces = ErrorListenerPathable.class)
+    private GetACLBuilder builder;
     @Mock
-    GetACLBuilder builder;
+    private Handler<AsyncResult<CuratorEvent>> handler;
 
-    String path = "/test/path";
-
-    @Mock
-    Handler<AsyncResult<CuratorEvent>> handler;
+    private String path = "/test/path";
 
     @Test
     public void testBuild() throws Exception{
@@ -44,11 +44,12 @@ public class DefaultGetACLBuilderTest {
 
         when(client.getCuratorFramework()).thenReturn(framework);
         when(framework.getACL()).thenReturn(builder);
-        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(builder);
+        ErrorListenerPathable<List<ACL>> elp = (ErrorListenerPathable<List<ACL>>) builder;
+        when(builder.inBackground(any(BackgroundCallback.class))).thenReturn(elp);
 
         operation.execute(client, handler);
 
         verify(builder).inBackground(any(BackgroundCallback.class));
-        verify(builder).forPath(path);
+        verify(elp).forPath(path);
     }
 }

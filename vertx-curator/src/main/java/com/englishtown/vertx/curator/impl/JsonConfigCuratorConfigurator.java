@@ -13,6 +13,7 @@ import org.apache.curator.ensemble.EnsembleProvider;
 import org.apache.curator.ensemble.exhibitor.DefaultExhibitorRestClient;
 import org.apache.curator.ensemble.exhibitor.ExhibitorEnsembleProvider;
 import org.apache.curator.ensemble.exhibitor.Exhibitors;
+import org.apache.curator.ensemble.fixed.FixedEnsembleProvider;
 import org.apache.curator.retry.*;
 
 import javax.inject.Inject;
@@ -73,15 +74,15 @@ public class JsonConfigCuratorConfigurator implements CuratorConfigurator {
         if (retryConfig != null) {
             String type = retryConfig.getString("type");
 
-            if (RetryNTimes.class.getName().equalsIgnoreCase(type)) {
+            if (matchesClass(RetryNTimes.class, type)) {
                 retryPolicy = new RetryNTimes(retryConfig.getInteger("n", 10), retryConfig.getInteger("sleep", 500));
-            } else if (RetryOneTime.class.getName().equalsIgnoreCase(type)) {
+            } else if (matchesClass(RetryOneTime.class, type)) {
                 retryPolicy = new RetryOneTime(retryConfig.getInteger("sleep", 500));
-            } else if (RetryUntilElapsed.class.getName().equalsIgnoreCase(type)) {
+            } else if (matchesClass(RetryUntilElapsed.class, type)) {
                 retryPolicy = new RetryUntilElapsed(retryConfig.getInteger("max_elapsed", 5000), retryConfig.getInteger("sleep", 500));
-            } else if (ExponentialBackoffRetry.class.getName().equalsIgnoreCase(type)) {
+            } else if (matchesClass(ExponentialBackoffRetry.class, type)) {
                 retryPolicy = new ExponentialBackoffRetry(retryConfig.getInteger("base_sleep", 500), retryConfig.getInteger("max_retries", 10));
-            } else if (BoundedExponentialBackoffRetry.class.getName().equalsIgnoreCase(type)) {
+            } else if (matchesClass(BoundedExponentialBackoffRetry.class, type)) {
                 retryPolicy = new BoundedExponentialBackoffRetry(retryConfig.getInteger("base_sleep", 500), retryConfig.getInteger("max_sleep", 5000), retryConfig.getInteger("max_retries", 10));
             }
         }
@@ -142,38 +143,46 @@ public class JsonConfigCuratorConfigurator implements CuratorConfigurator {
         pathSuffixes = convertToList(pathConfig, "Path suffixes must be of type string: ");
     }
 
-    protected void initEnsembleProvider(JsonObject ensemble) {
+    protected void initEnsembleProvider(JsonObject ensembleConfig) {
 
-        if (ensemble == null) {
+        if (ensembleConfig == null) {
             return;
         }
 
-        String name = ensemble.getString("name");
+        String name = ensembleConfig.getString("name");
 
         if (Strings.isNullOrEmpty(name)) {
             return;
         }
 
-        if (ExhibitorEnsembleProvider.class.getName().equalsIgnoreCase(name)) {
+        // ExhibitorEnsembleProvider
+        if (matchesClass(ExhibitorEnsembleProvider.class, name)) {
 
-            List<String> hosts = convertToList(ensemble.getJsonArray("hosts"), "Hosts must be of type string: ");
+            List<String> hosts = convertToList(ensembleConfig.getJsonArray("hosts"), "Hosts must be of type string: ");
             if (hosts == null || hosts.size() == 0) {
                 throw new IllegalArgumentException("Exhibitor ensemble provider must have hosts");
             }
 
-            int restPort = ensemble.getInteger("rest_port", 8080);
-            String restUriPath = ensemble.getString("rest_uri_path", "/exhibitor/v1/cluster/list");
-            int pollingMs = ensemble.getInteger("polling_ms", 5000);
-            String backupConnectionString = ensemble.getString("backup_connection_string", getConnectionString());
+            int restPort = ensembleConfig.getInteger("rest_port", 8080);
+            String restUriPath = ensembleConfig.getString("rest_uri_path", "/exhibitor/v1/cluster/list");
+            int pollingMs = ensembleConfig.getInteger("polling_ms", 5000);
+            String backupConnectionString = ensembleConfig.getString("backup_connection_string", getConnectionString());
 
             Exhibitors exhibitors = new Exhibitors(hosts, restPort, () -> backupConnectionString);
             ensembleProvider = new ExhibitorEnsembleProvider(exhibitors, new DefaultExhibitorRestClient(), restUriPath, pollingMs, getRetryPolicy());
 
+        // FixedEnsembleProvider
+        } else if (matchesClass(FixedEnsembleProvider.class, name)) {
+
+            if (Strings.isNullOrEmpty(connectionString)) {
+                throw new IllegalArgumentException("Fixed ensemble requires a valid connection string");
+            }
+
+            ensembleProvider = new FixedEnsembleProvider(connectionString);
         } else {
             throw new IllegalArgumentException("EnsembleProvider " + name + " is not supported");
 
         }
-
     }
 
     @Override
@@ -227,6 +236,10 @@ public class JsonConfigCuratorConfigurator implements CuratorConfigurator {
         }
 
         return new JsonObject();
+    }
+
+    private boolean matchesClass(Class clazz, String name) {
+        return clazz.getName().equalsIgnoreCase(name) || clazz.getSimpleName().equalsIgnoreCase(name);
     }
 
 }

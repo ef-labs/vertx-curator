@@ -9,6 +9,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.ensemble.EnsembleProvider;
+import org.apache.curator.ensemble.exhibitor.ExhibitorEnsembleProvider;
+import org.apache.curator.ensemble.fixed.FixedEnsembleProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -252,6 +254,31 @@ public class JsonConfigCuratorConfiguratorTest {
         ensemble.put("name", "not_exists");
 
         new JsonConfigCuratorConfigurator(vertx);
+    }
+
+    @Test
+    public void testJsonConfigCuratorConfigurator_FixedEnsemble() throws Exception {
+
+        // ensemble
+        JsonObject ensemble = new JsonObject();
+        config.put(JsonConfigCuratorConfigurator.FIELD_ENSEMBLE, ensemble);
+        ensemble.put("name", FixedEnsembleProvider.class.getName());
+
+        JsonConfigCuratorConfigurator configurator = new JsonConfigCuratorConfigurator(vertx);
+        assertTrue(configurator.getEnsembleProvider() instanceof FixedEnsembleProvider);
+    }
+
+    @Test
+    public void testJsonConfigCuratorConfigurator_ExhibitorEnsemble() throws Exception {
+
+        // ensemble
+        JsonObject ensemble = new JsonObject();
+        config.put(JsonConfigCuratorConfigurator.FIELD_ENSEMBLE, ensemble);
+        ensemble.put("name", ExhibitorEnsembleProvider.class.getName());
+        ensemble.put("hosts", new JsonArray().add("host1").add("host2"));
+
+        JsonConfigCuratorConfigurator configurator = new JsonConfigCuratorConfigurator(vertx);
+        assertTrue(configurator.getEnsembleProvider() instanceof ExhibitorEnsembleProvider);
     }
 
 }

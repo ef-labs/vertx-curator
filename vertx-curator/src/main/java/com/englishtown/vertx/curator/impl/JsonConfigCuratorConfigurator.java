@@ -169,7 +169,17 @@ public class JsonConfigCuratorConfigurator implements CuratorConfigurator {
             String backupConnectionString = ensembleConfig.getString("backup_connection_string", getConnectionString());
 
             Exhibitors exhibitors = new Exhibitors(hosts, restPort, () -> backupConnectionString);
-            ensembleProvider = new ExhibitorEnsembleProvider(exhibitors, new DefaultExhibitorRestClient(), restUriPath, pollingMs, getRetryPolicy());
+            ExhibitorEnsembleProvider provider = new ExhibitorEnsembleProvider(exhibitors, new DefaultExhibitorRestClient(), restUriPath, pollingMs, getRetryPolicy());
+            try {
+                provider.pollForInitialEnsemble();
+            } catch (Exception e) {
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                } else {
+                    throw new RuntimeException(e);
+                }
+            }
+            ensembleProvider = provider;
 
         // FixedEnsembleProvider
         } else if (matchesClass(FixedEnsembleProvider.class, name)) {
